@@ -24,6 +24,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'djoser',
+    'users.apps.UsersConfig',
+    'cookbook.apps.CookbookConfig',
 ]
 
 MIDDLEWARE = [
