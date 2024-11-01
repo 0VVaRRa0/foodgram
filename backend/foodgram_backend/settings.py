@@ -89,9 +89,13 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
 }
 
+DJOSER = {
+    'LOGIN_FIELD': 'email',
+}
+
 LANGUAGE_CODE = 'ru-RU'
 
-TIME_ZONE = 'Europe/Belrade'
+TIME_ZONE = 'Europe/Belgrade'
 
 USE_I18N = True
 
@@ -106,3 +110,5 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = '/media/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = 'users.CustomUser'
