@@ -1,11 +1,11 @@
 from djoser.serializers import UserSerializer as BaseUserSerializer
-# from drf_extra_fields.fields import Base64ImageField
+from drf_extra_fields.fields import Base64ImageField
 
 from .models import CustomUser
 
 
 class UserSerializer(BaseUserSerializer):
-    # avatar = Base64ImageField(required=False, blank=True, null=True)
+    avatar = Base64ImageField(required=False)
 
     class Meta(BaseUserSerializer.Meta):
         model = CustomUser
@@ -15,5 +15,5 @@ class UserSerializer(BaseUserSerializer):
             'username',
             'first_name',
             'last_name',
-            # 'avatar'
+            'avatar'
         )

@@ -3,9 +3,12 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+from users.views import AvatarUpdate
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/users/me/avatar/', AvatarUpdate.as_view()),
     path('api/', include('djoser.urls')),
     path('api/auth/', include('djoser.urls.authtoken')),
 ]

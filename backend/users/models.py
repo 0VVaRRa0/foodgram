@@ -38,6 +38,7 @@ class CustomUser(AbstractUser):
     email = models.EmailField(unique=True, blank=False)
     first_name = models.CharField(max_length=30, blank=False)
     last_name = models.CharField(max_length=30, blank=False)
+    avatar = models.ImageField(upload_to='avatars/', default=None)
 
     objects = CustomUserManager()
 
