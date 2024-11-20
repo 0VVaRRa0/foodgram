@@ -94,6 +94,10 @@ REST_FRAMEWORK = {
 DJOSER = {
     'LOGIN_FIELD': 'email',
     'HIDE_USERS': False,
+    'SERIALIZERS': {
+        'user': 'users.serializers.UserSerializer',
+        'current_user': 'users.serializers.UserSerializer',
+    }
 }
 
 LANGUAGE_CODE = 'ru-RU'
@@ -110,7 +114,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = '/app/collected_static/'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = '/media/'
+MEDIA_ROOT = BASE_DIR / '/media/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
