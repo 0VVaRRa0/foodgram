@@ -13,7 +13,8 @@ class AvatarUpdate(APIView):
         serializer = UserSerializer(
             instance=request.user,
             data=request.data,
-            partial=True
+            partial=True,
+            context={'request': request}
         )
         if serializer.is_valid():
             serializer.save()
