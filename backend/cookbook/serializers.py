@@ -22,6 +22,8 @@ class IngredienSerializer(serializers.ModelSerializer):
 class RecipeSerializer(serializers.ModelSerializer):
     image = Base64ImageField()
     author = UserSerializer(read_only=True)
+    tags = serializers.PrimaryKeyRelatedField(
+        queryset=Tag.objects.all(), many=True)
 
     class Meta:
         model = Recipe
@@ -33,3 +35,8 @@ class RecipeSerializer(serializers.ModelSerializer):
             'cooking_time',
             'author'
         )
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['tags'] = TagSerializer(instance.tags, many=True).data
+        return representation
