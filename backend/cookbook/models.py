@@ -1,3 +1,4 @@
+from django.core.validators import MinValueValidator
 from django.db import models
 
 
@@ -31,7 +32,8 @@ class Recipe(models.Model):
     name = models.CharField('Название рецепта', max_length=256)
     image = models.ImageField('Изображение', upload_to='recipe_images/')
     text = models.TextField('Описание')
-    cooking_time = models.IntegerField('Время приготовления в минутах')
+    cooking_time = models.IntegerField(
+        'Время приготовления в минутах', validators=[MinValueValidator(1)])
     author = models.ForeignKey(
         'users.CustomUser',
         verbose_name='Автор',
@@ -40,6 +42,8 @@ class Recipe(models.Model):
     )
     tags = models.ManyToManyField(
         Tag, verbose_name='Теги', related_name='recipes')
+    ingredients = models.ManyToManyField(
+        Ingredient, through='RecipeIngredient', verbose_name='Ингредиент')
 
     class Meta:
         ordering = ('id', 'name')
@@ -48,3 +52,13 @@ class Recipe(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class RecipeIngredient(models.Model):
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+    amount = models.IntegerField(
+        'Количество', validators=[MinValueValidator(1)])
+
+    class Meta:
+        unique_together = ('recipe', 'ingredient')
