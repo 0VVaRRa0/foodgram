@@ -6,7 +6,6 @@ class Tag(models.Model):
     slug = models.SlugField('Слаг', max_length=32)
 
     class Meta:
-        default_related_name = 'tags'
         ordering = ('id', 'name')
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
@@ -20,7 +19,6 @@ class Ingredient(models.Model):
     measurement_unit = models.CharField('Единицы измерения', max_length=64)
 
     class Meta:
-        default_related_name = 'ingredients'
         ordering = ('id', 'name')
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
@@ -36,7 +34,6 @@ class Recipe(models.Model):
     cooking_time = models.IntegerField('Время приготовления в минутах')
 
     class Meta:
-        default_related_name = 'recipes'
         ordering = ('id', 'name')
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'

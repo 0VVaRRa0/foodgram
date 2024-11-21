@@ -48,5 +48,4 @@ class CustomUser(AbstractUser):
     REQUIRED_FIELDS = ['first_name', 'last_name', 'username']
 
     class Meta:
-        default_related_name = 'users'
         ordering = ('id',)
