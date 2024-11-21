@@ -29,11 +29,12 @@ class RecipeSerializer(serializers.ModelSerializer):
         model = Recipe
         fields = (
             'id',
+            'tags',
+            'author',
             'name',
             'image',
             'text',
             'cooking_time',
-            'author'
         )
 
     def to_representation(self, instance):
