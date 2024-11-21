@@ -2,7 +2,7 @@ from djoser.serializers import UserSerializer as BaseUserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework.serializers import SerializerMethodField
 
-from .models import CustomUser, Subscription
+from .models import CustomUser
 
 
 class UserSerializer(BaseUserSerializer):
@@ -22,11 +22,12 @@ class UserSerializer(BaseUserSerializer):
         )
 
     def get_is_subscribed(self, obj):
-        request = self.context.get('request')
-        if not request or not hasattr(request, 'user'):
-            return False
-        current_user = request.user
-        return Subscription.objects.filter(
-            subscriber=current_user,
-            author=obj
-        ).exists()
+        return False
+    #     request = self.context.get('request')
+    #     if not request or not hasattr(request, 'user'):
+    #         return False
+    #     current_user = request.user
+    #     return Subscription.objects.filter(
+    #         subscriber=current_user,
+    #         author=obj
+    #     ).exists()

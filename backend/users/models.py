@@ -50,26 +50,3 @@ class CustomUser(AbstractUser):
     class Meta:
         default_related_name = 'users'
         ordering = ('id',)
-
-
-class Subscription(models.Model):
-    subscriber = models.ForeignKey(
-        CustomUser,
-        verbose_name='Подписчик',
-        on_delete=models.CASCADE,
-        related_name='subscribers'
-    )
-    author = models.ForeignKey(
-        CustomUser,
-        verbose_name='Автор',
-        on_delete=models.CASCADE,
-        related_name='authors'
-    )
-
-    class Meta:
-        ordering = ('id',)
-        verbose_name = 'Подписка'
-        verbose_name_plural = 'Подписки'
-
-    def __str__(self):
-        return f'{self.follower} подписан на {self.following}'
