@@ -27,3 +27,19 @@ class Ingredient(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Recipe(models.Model):
+    name = models.CharField('Название рецепта', max_length=256)
+    image = models.ImageField('Изображение', upload_to='recipe_images/')
+    text = models.TextField('Описание')
+    cooking_time = models.IntegerField('Время приготовления в минутах')
+
+    class Meta:
+        default_related_name = 'recipes'
+        ordering = ('id', 'name')
+        verbose_name = 'Рецепт'
+        verbose_name_plural = 'Рецепты'
+
+    def __str__(self):
+        return self.name
