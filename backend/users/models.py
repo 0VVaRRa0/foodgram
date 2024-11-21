@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 
+from .utils import avatar_upload_path
+
 
 class CustomUserManager(BaseUserManager):
 
@@ -38,7 +40,7 @@ class CustomUser(AbstractUser):
     email = models.EmailField(unique=True, blank=False)
     first_name = models.CharField(max_length=30, blank=False)
     last_name = models.CharField(max_length=30, blank=False)
-    avatar = models.ImageField(upload_to='avatars/', default=None)
+    avatar = models.ImageField(upload_to=avatar_upload_path, default=None)
 
     objects = CustomUserManager()
 
