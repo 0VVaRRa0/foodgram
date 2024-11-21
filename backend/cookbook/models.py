@@ -32,6 +32,12 @@ class Recipe(models.Model):
     image = models.ImageField('Изображение', upload_to='recipe_images/')
     text = models.TextField('Описание')
     cooking_time = models.IntegerField('Время приготовления в минутах')
+    author = models.ForeignKey(
+        'users.CustomUser',
+        verbose_name='Автор',
+        on_delete=models.CASCADE,
+        related_name='recipes'
+    )
 
     class Meta:
         ordering = ('id', 'name')
