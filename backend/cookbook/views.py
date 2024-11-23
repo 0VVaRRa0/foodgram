@@ -1,9 +1,16 @@
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, SAFE_METHODS
+from rest_framework.response import Response
+from rest_framework.status import HTTP_201_CREATED
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 
 from .models import Tag, Ingredient, Recipe
-from .serializers import TagSerializer, IngredienSerializer, RecipeSerializer
+from .serializers import (
+    TagSerializer,
+    IngredienSerializer,
+    GetRecipesSerializer,
+    RecipeSerializer
+)
 
 
 class TagViewSet(ReadOnlyModelViewSet):
@@ -22,8 +29,17 @@ class IngredientViewSet(ReadOnlyModelViewSet):
 
 class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
     permission_classes = (AllowAny,)
 
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+    def get_serializer_class(self):
+        if self.request.method in SAFE_METHODS:
+            return GetRecipesSerializer
+        return RecipeSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        recipe = serializer.save(author=request.user)
+
+        response_serializer = GetRecipesSerializer(recipe)
+        return Response(response_serializer.data, status=HTTP_201_CREATED)
