@@ -1,5 +1,5 @@
-from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
+from drf_extra_fields.fields import Base64ImageField
 
 from .models import Ingredient, Tag, Recipe, RecipeIngredient
 from users.serializers import UserSerializer
@@ -13,7 +13,7 @@ class TagSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'slug')
 
 
-class IngredienSerializer(serializers.ModelSerializer):
+class IngredientSerializer(serializers.ModelSerializer):
     '''Сериализатор для модели Ingredient'''
 
     class Meta:

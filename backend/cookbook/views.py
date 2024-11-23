@@ -7,7 +7,7 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from .models import Tag, Ingredient, Recipe
 from .serializers import (
     TagSerializer,
-    IngredienSerializer,
+    IngredientSerializer,
     GetRecipesSerializer,
     RecipeSerializer
 )
@@ -22,7 +22,7 @@ class TagViewSet(ReadOnlyModelViewSet):
 
 class IngredientViewSet(ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
-    serializer_class = IngredienSerializer
+    serializer_class = IngredientSerializer
     permission_classes = (AllowAny,)
     pagination_class = None
 
@@ -40,6 +40,5 @@ class RecipeViewSet(ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         recipe = serializer.save(author=request.user)
-
         response_serializer = GetRecipesSerializer(recipe)
         return Response(response_serializer.data, status=HTTP_201_CREATED)
