@@ -95,15 +95,13 @@ class ShortLink(models.Model):
 class ShoppingCart(models.Model):
     user = models.OneToOneField(
         User, verbose_name='Пользователь', on_delete=models.CASCADE)
-    recipes = models.ForeignKey(
-        Recipe, verbose_name='Рецепты', on_delete=models.CASCADE)
+    recipe = models.ManyToManyField(Recipe, verbose_name='Рецепты')
 
     class Meta:
         ordering = ('id',)
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Списки покупок'
-        unique_together = ('user', 'recipes')
 
     def __str__(self):
         return (f'Корзина пользователя {self.user}:\n'
-                f'{self.recipes}')
+                f'{self.recipe}')
