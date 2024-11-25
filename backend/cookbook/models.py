@@ -62,3 +62,17 @@ class RecipeIngredient(models.Model):
 
     class Meta:
         unique_together = ('recipe', 'ingredient')
+
+
+class ShortLink(models.Model):
+    recipe = models.OneToOneField(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name="short_link",
+        verbose_name="Рецепт"
+    )
+    short_link = models.CharField(
+        max_length=10,
+        unique=True,
+        verbose_name="Короткая ссылка"
+    )
