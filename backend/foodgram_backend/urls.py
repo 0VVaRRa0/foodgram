@@ -4,7 +4,12 @@ from django.contrib import admin
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from cookbook.views import TagViewSet, IngredientViewSet, RecipeViewSet
+from cookbook.views import (
+    TagViewSet,
+    IngredientViewSet,
+    RecipeViewSet,
+    ShortLinkRedirectView
+)
 from users.views import AvatarUpdate
 
 router = DefaultRouter()
@@ -17,6 +22,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
     path('api/', include('djoser.urls')),
+    path('s/<str:short_link>/', ShortLinkRedirectView.as_view()),
     path('api/users/me/avatar/', AvatarUpdate.as_view()),
     path('api/auth/', include('djoser.urls.authtoken')),
 ]

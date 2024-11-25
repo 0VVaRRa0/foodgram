@@ -1,7 +1,8 @@
-from rest_framework import serializers
 from drf_extra_fields.fields import Base64ImageField
+from rest_framework import serializers
 
-from .models import Ingredient, Tag, Recipe, RecipeIngredient
+from .constants import SITE_URL
+from .models import Ingredient, Tag, Recipe, RecipeIngredient, ShortLink
 from users.serializers import UserSerializer
 
 
@@ -117,3 +118,19 @@ class RecipeSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         context = {'request': request}
         return GetRecipesSerializer(instance, context=context).data
+
+
+class ShortLinkSerializer(serializers.ModelSerializer):
+    short_link = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ShortLink
+        fields = ['short_link']
+
+    def get_short_link(self, obj):
+        return f'{SITE_URL}/s/{obj.short_link}'
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['short-link'] = representation.pop('short_link')
+        return representation
