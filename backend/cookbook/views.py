@@ -1,11 +1,14 @@
 from hashids import Hashids
-from django.http import HttpResponseNotFound
 from django.shortcuts import get_object_or_404, redirect
 from django.views import View
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, SAFE_METHODS
 from rest_framework.response import Response
-from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
+from rest_framework.status import (
+    HTTP_204_NO_CONTENT,
+    HTTP_400_BAD_REQUEST,
+    HTTP_404_NOT_FOUND
+)
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from .constants import SHORT_LINK_MIN_LENGTH
@@ -85,9 +88,6 @@ class ShortLinkRedirectView(View):
         try:
             recipe_id = hashids.decode(short_link)[0]
         except IndexError:
-            return HttpResponseNotFound('Ссылка не найдена')
-        try:
-            recipe = Recipe.objects.get(id=recipe_id)
-        except Recipe.DoesNotExist:
-            return HttpResponseNotFound('Рецепт не найден')
+            return Response(status=HTTP_404_NOT_FOUND)
+        recipe = get_object_or_404(Recipe, id=recipe_id)
         return redirect('recipe-detail', pk=recipe.id)
