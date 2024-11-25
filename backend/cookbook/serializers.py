@@ -9,7 +9,8 @@ from .models import (
     Recipe,
     RecipeIngredient,
     ShortLink,
-    ShoppingCart
+    ShoppingCart,
+    Favorite
 )
 from users.serializers import UserSerializer
 
@@ -47,6 +48,7 @@ class GetRecipesSerializer(serializers.ModelSerializer):
 
     author = UserSerializer(read_only=True)
     tags = TagSerializer(read_only=True, many=True)
+    is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
@@ -56,6 +58,7 @@ class GetRecipesSerializer(serializers.ModelSerializer):
             'tags',
             'author',
             'ingredients',
+            'is_favorited',
             'is_in_shopping_cart',
             'name',
             'image',
@@ -75,6 +78,13 @@ class GetRecipesSerializer(serializers.ModelSerializer):
         cart, _ = ShoppingCart.objects.get_or_create(user=user)
         recipe = get_object_or_404(Recipe, id=obj.id)
         if cart.recipe.filter(id=recipe.id).exists():
+            return True
+        return False
+
+    def get_is_favorited(self, obj):
+        user = self.context['request'].user
+        recipe = get_object_or_404(Recipe, id=obj.id)
+        if Favorite.objects.filter(user=user, recipe=recipe).exists():
             return True
         return False
 
