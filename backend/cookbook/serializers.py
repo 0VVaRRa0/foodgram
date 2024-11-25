@@ -154,7 +154,7 @@ class ShortLinkSerializer(serializers.ModelSerializer):
         return representation
 
 
-class ShoppingCartSerializer(serializers.ModelSerializer):
+class FavoriteShoppingCartSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe

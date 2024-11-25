@@ -12,14 +12,14 @@ from rest_framework.status import (
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from .constants import SHORT_LINK_MIN_LENGTH
-from .models import Tag, Ingredient, Recipe, ShortLink, ShoppingCart
+from .models import Tag, Ingredient, Recipe, ShortLink, ShoppingCart, Favorite
 from .serializers import (
     TagSerializer,
     IngredientSerializer,
     GetRecipesSerializer,
     RecipeSerializer,
     ShortLinkSerializer,
-    ShoppingCartSerializer
+    FavoriteShoppingCartSerializer
 )
 from .utils import generate_short_link
 
@@ -70,7 +70,7 @@ class RecipeViewSet(ModelViewSet):
             if cart.recipe.filter(id=recipe.id).exists():
                 return Response(status=HTTP_400_BAD_REQUEST)
             cart.recipe.add(recipe)
-            serializer = ShoppingCartSerializer(
+            serializer = FavoriteShoppingCartSerializer(
                 recipe, context={'request': request})
             return Response(serializer.data)
 
@@ -79,6 +79,23 @@ class RecipeViewSet(ModelViewSet):
             if not cart.recipe.filter(id=recipe.id).exists():
                 return Response(status=HTTP_400_BAD_REQUEST)
             cart.recipe.remove(recipe)
+            return Response(status=HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['post', 'delete'], url_path='favorite')
+    def favorite(self, request, pk):
+        user = request.user
+        recipe = get_object_or_404(Recipe, id=pk)
+
+        if request.method == 'POST':
+            if Favorite.objects.filter(user=user, recipe=recipe).exists():
+                return Response(status=HTTP_400_BAD_REQUEST)
+            Favorite.objects.create(user=user, recipe=recipe)
+            serializer = FavoriteShoppingCartSerializer(recipe)
+            return Response(serializer.data)
+
+        if request.method == 'DELETE':
+            favorite = get_object_or_404(Favorite, user=user, recipe=recipe)
+            favorite.delete()
             return Response(status=HTTP_204_NO_CONTENT)
 
 
