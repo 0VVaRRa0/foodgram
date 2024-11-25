@@ -86,17 +86,34 @@ class RecipeSerializer(serializers.ModelSerializer):
             'cooking_time'
         )
 
+    def create_ingredients(self, ingredients, recipe):
+        RecipeIngredient.objects.bulk_create(
+            RecipeIngredient(
+                recipe=recipe,
+                ingredient_id=ingredient.get('id'),
+                amount=ingredient.get('amount'),)
+            for ingredient in ingredients
+        )
+
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredients')
         tags_data = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
-        RecipeIngredient.objects.bulk_create([
-            RecipeIngredient(
-                recipe=recipe,
-                ingredient_id=ingredient['id'],
-                amount=ingredient['amount']
-            )
-            for ingredient in ingredients
-        ])
+        self.create_ingredients(recipe=recipe, ingredients=ingredients)
         recipe.tags.set(tags_data)
         return recipe
+
+    def update(self, instance, validated_data):
+        tags = validated_data.pop('tags')
+        ingredients = validated_data.pop('ingredients')
+        instance.tags.set(tags)
+        RecipeIngredient.objects.filter(recipe=instance).delete()
+        super().update(instance, validated_data)
+        self.create_ingredients(ingredients, instance)
+        instance.save()
+        return instance
+
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        context = {'request': request}
+        return GetRecipesSerializer(instance, context=context).data
