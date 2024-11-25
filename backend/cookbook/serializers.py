@@ -2,7 +2,14 @@ from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
 from .constants import SITE_URL
-from .models import Ingredient, Tag, Recipe, RecipeIngredient, ShortLink
+from .models import (
+    Ingredient,
+    Tag,
+    Recipe,
+    RecipeIngredient,
+    ShortLink,
+    ShoppingCart
+)
 from users.serializers import UserSerializer
 
 
@@ -134,3 +141,15 @@ class ShortLinkSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
         representation['short-link'] = representation.pop('short_link')
         return representation
+
+
+class ShoppingCartSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(source='recipe.id', read_only=True)
+    name = serializers.CharField(source='recipe.name', read_only=True)
+    image = serializers.CharField(source='recipe.image', read_only=True)
+    cooking_time = serializers.IntegerField(
+        source='recipe.cooking_time', read_only=True)
+
+    class Meta:
+        model = ShoppingCart
+        fields = ('id', 'name', 'image', 'cooking_time')

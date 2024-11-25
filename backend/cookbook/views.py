@@ -15,7 +15,8 @@ from .serializers import (
     IngredientSerializer,
     GetRecipesSerializer,
     RecipeSerializer,
-    ShortLinkSerializer
+    ShortLinkSerializer,
+    ShoppingCartSerializer
 )
 from .utils import generate_short_link
 
@@ -44,7 +45,7 @@ class RecipeViewSet(ModelViewSet):
         elif self.action == 'get_short_link':
             return ShortLinkSerializer
         elif self.action == 'add_to_shopping_cart':
-            pass
+            return ShoppingCartSerializer
         return RecipeSerializer
 
     def perform_create(self, serializer):
