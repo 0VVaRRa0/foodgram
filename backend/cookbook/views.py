@@ -43,6 +43,8 @@ class RecipeViewSet(ModelViewSet):
             return GetRecipesSerializer
         elif self.action == 'get_short_link':
             return ShortLinkSerializer
+        elif self.action == 'add_to_shopping_cart':
+            pass
         return RecipeSerializer
 
     def perform_create(self, serializer):
@@ -57,6 +59,14 @@ class RecipeViewSet(ModelViewSet):
         )
         serializer = ShortLinkSerializer(short_link)
         return Response(serializer.data)
+
+    # @action(detail=True, methods=['post'], url_path='shopping_cart')
+    # def add_to_shopping_cart(self, request, pk):
+    #     pass
+
+    # @action(detail=True, methods=['delete'], url_path='shopping_cart')
+    # def remove_from_shopping_cart(self, request, pk):
+    #     pass
 
 
 class ShortLinkRedirectView(View):

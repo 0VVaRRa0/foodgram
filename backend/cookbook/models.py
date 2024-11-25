@@ -1,5 +1,9 @@
+from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
+
+
+User = get_user_model()
 
 
 class Tag(models.Model):
@@ -35,7 +39,7 @@ class Recipe(models.Model):
     cooking_time = models.IntegerField(
         'Время приготовления в минутах', validators=[MinValueValidator(1)])
     author = models.ForeignKey(
-        'users.CustomUser',
+        User,
         verbose_name='Автор',
         on_delete=models.CASCADE,
         related_name='recipes'
@@ -76,3 +80,30 @@ class ShortLink(models.Model):
         unique=True,
         verbose_name="Короткая ссылка"
     )
+
+    class Meta:
+        ordering = ('id',)
+        verbose_name = 'Короткая ссылка на рецепт'
+        verbose_name_plural = 'Короткие ссылки на рецепты'
+        unique_together = ('recipe', 'short_link')
+
+    def __str__(self):
+        return (
+            f'Короткая ссылка для рецепта {self.recipe}: {self.short_link}')
+
+
+class ShoppingCart(models.Model):
+    user = models.OneToOneField(
+        User, verbose_name='Пользователь', on_delete=models.CASCADE)
+    recipes = models.ForeignKey(
+        Recipe, verbose_name='Рецепты', on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ('id',)
+        verbose_name = 'Список покупок'
+        verbose_name_plural = 'Списки покупок'
+        unique_together = ('user', 'recipes')
+
+    def __str__(self):
+        return (f'Корзина пользователя {self.user}:\n'
+                f'{self.recipes}')
