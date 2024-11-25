@@ -49,3 +49,24 @@ class CustomUser(AbstractUser):
 
     class Meta:
         ordering = ('id',)
+
+
+class Subscription(models.Model):
+    follower = models.ForeignKey(
+        CustomUser,
+        verbose_name='Подписчик',
+        on_delete=models.CASCADE,
+        related_name='followers'
+    )
+    following = models.ForeignKey(
+        CustomUser,
+        verbose_name='Автор',
+        on_delete=models.CASCADE,
+        related_name='following'
+    )
+
+    class Meta:
+        ordering = ('id',)
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+        unique_together = ('follower', 'following')
