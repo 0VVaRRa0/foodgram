@@ -60,26 +60,26 @@ class RecipeViewSet(ModelViewSet):
         serializer = ShortLinkSerializer(short_link)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['post'], url_path='shopping_cart')
-    def add_to_shopping_cart(self, request, pk):
+    @action(detail=True, methods=['post', 'delete'], url_path='shopping_cart')
+    def shopping_cart(self, request, pk):
         user = request.user
         recipe = get_object_or_404(Recipe, id=pk)
-        cart, _ = ShoppingCart.objects.get_or_create(user=user)
-        if cart.recipe.filter(id=recipe.id).exists():
-            return Response(status=HTTP_400_BAD_REQUEST)
-        cart.recipe.add(recipe)
-        serializer = ShoppingCartSerializer(cart, context={'request': request})
-        return Response(serializer.data)
 
-    @action(detail=True, methods=['delete'], url_path='shopping_cart')
-    def remove_from_shopping_cart(self, request, pk):
-        user = request.user
-        recipe = get_object_or_404(Recipe, id=pk)
-        cart = get_object_or_404(ShoppingCart, user=user)
-        if not cart.recipe.filter(id=recipe.id).exists():
-            return Response(status=HTTP_400_BAD_REQUEST)
-        cart.recipe.remove(recipe)
-        return Response(status=HTTP_204_NO_CONTENT)
+        if request.method == 'POST':
+            cart, _ = ShoppingCart.objects.get_or_create(user=user)
+            if cart.recipe.filter(id=recipe.id).exists():
+                return Response(status=HTTP_400_BAD_REQUEST)
+            cart.recipe.add(recipe)
+            serializer = ShoppingCartSerializer(
+                recipe, context={'request': request})
+            return Response(serializer.data)
+
+        elif request.method == 'DELETE':
+            cart = get_object_or_404(ShoppingCart, user=user)
+            if not cart.recipe.filter(id=recipe.id).exists():
+                return Response(status=HTTP_400_BAD_REQUEST)
+            cart.recipe.remove(recipe)
+            return Response(status=HTTP_204_NO_CONTENT)
 
 
 class ShortLinkRedirectView(View):

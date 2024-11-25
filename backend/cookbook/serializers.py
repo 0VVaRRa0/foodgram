@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
@@ -46,6 +47,7 @@ class GetRecipesSerializer(serializers.ModelSerializer):
 
     author = UserSerializer(read_only=True)
     tags = TagSerializer(read_only=True, many=True)
+    is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
@@ -54,6 +56,7 @@ class GetRecipesSerializer(serializers.ModelSerializer):
             'tags',
             'author',
             'ingredients',
+            'is_in_shopping_cart',
             'name',
             'image',
             'text',
@@ -66,6 +69,14 @@ class GetRecipesSerializer(serializers.ModelSerializer):
         representation['ingredients'] = GetRecipeIngredientsSerializer(
             ingredients, many=True).data
         return representation
+
+    def get_is_in_shopping_cart(self, obj):
+        user = self.context['request'].user
+        cart, _ = ShoppingCart.objects.get_or_create(user=user)
+        recipe = get_object_or_404(Recipe, id=obj.id)
+        if cart.recipe.filter(id=recipe.id).exists():
+            return True
+        return False
 
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
@@ -144,12 +155,7 @@ class ShortLinkSerializer(serializers.ModelSerializer):
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(source='recipe.first.id', read_only=True)
-    name = serializers.CharField(source='recipe.first.name', read_only=True)
-    image = serializers.ImageField(source='recipe.first.image', read_only=True)
-    cooking_time = serializers.IntegerField(
-        source='recipe.first.cooking_time', read_only=True)
 
     class Meta:
-        model = ShoppingCart
+        model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
