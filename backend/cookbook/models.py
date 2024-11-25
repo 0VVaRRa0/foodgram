@@ -102,6 +102,21 @@ class ShoppingCart(models.Model):
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Списки покупок'
 
-    def __str__(self):
-        return (f'Корзина пользователя {self.user}:\n'
-                f'{self.recipe}')
+
+class Favorite(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Пользователь',
+        related_name='favorites'
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        verbose_name='Рецепт'
+    )
+
+    class Meta:
+        ordering = ('id',)
+        verbose_name = 'Избранное'
+        verbose_name_plural = 'Избранное'
