@@ -1,15 +1,15 @@
-from django.http import HttpResponseNotFound
-from django.shortcuts import redirect
-from django.views import View
 from hashids import Hashids
+from django.http import HttpResponseNotFound
+from django.shortcuts import get_object_or_404, redirect
+from django.views import View
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, SAFE_METHODS
 from rest_framework.response import Response
+from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-
 from .constants import SHORT_LINK_MIN_LENGTH
-from .models import Tag, Ingredient, Recipe, ShortLink
+from .models import Tag, Ingredient, Recipe, ShortLink, ShoppingCart
 from .serializers import (
     TagSerializer,
     IngredientSerializer,
@@ -42,10 +42,6 @@ class RecipeViewSet(ModelViewSet):
     def get_serializer_class(self):
         if self.request.method in SAFE_METHODS:
             return GetRecipesSerializer
-        elif self.action == 'get_short_link':
-            return ShortLinkSerializer
-        elif self.action == 'add_to_shopping_cart':
-            return ShoppingCartSerializer
         return RecipeSerializer
 
     def perform_create(self, serializer):
@@ -61,13 +57,26 @@ class RecipeViewSet(ModelViewSet):
         serializer = ShortLinkSerializer(short_link)
         return Response(serializer.data)
 
-    # @action(detail=True, methods=['post'], url_path='shopping_cart')
-    # def add_to_shopping_cart(self, request, pk):
-    #     pass
+    @action(detail=True, methods=['post'], url_path='shopping_cart')
+    def add_to_shopping_cart(self, request, pk):
+        user = request.user
+        recipe = get_object_or_404(Recipe, id=pk)
+        cart, _ = ShoppingCart.objects.get_or_create(user=user)
+        if cart.recipe.filter(id=recipe.id).exists():
+            return Response(status=HTTP_400_BAD_REQUEST)
+        cart.recipe.add(recipe)
+        serializer = ShoppingCartSerializer(cart, context={'request': request})
+        return Response(serializer.data)
 
-    # @action(detail=True, methods=['delete'], url_path='shopping_cart')
-    # def remove_from_shopping_cart(self, request, pk):
-    #     pass
+    @action(detail=True, methods=['delete'], url_path='shopping_cart')
+    def remove_from_shopping_cart(self, request, pk):
+        user = request.user
+        recipe = get_object_or_404(Recipe, id=pk)
+        cart = get_object_or_404(ShoppingCart, user=user)
+        if not cart.recipe.filter(id=recipe.id).exists():
+            return Response(status=HTTP_400_BAD_REQUEST)
+        cart.recipe.remove(recipe)
+        return Response(status=HTTP_204_NO_CONTENT)
 
 
 class ShortLinkRedirectView(View):
