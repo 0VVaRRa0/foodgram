@@ -19,7 +19,7 @@ from .serializers import (
     GetRecipesSerializer,
     RecipeSerializer,
     ShortLinkSerializer,
-    FavoriteShoppingCartSerializer
+    ShortRecipeInfoSerializer
 )
 from .utils import generate_short_link
 
@@ -70,7 +70,7 @@ class RecipeViewSet(ModelViewSet):
             if cart.recipe.filter(id=recipe.id).exists():
                 return Response(status=HTTP_400_BAD_REQUEST)
             cart.recipe.add(recipe)
-            serializer = FavoriteShoppingCartSerializer(
+            serializer = ShortRecipeInfoSerializer(
                 recipe, context={'request': request})
             return Response(serializer.data)
 
@@ -90,7 +90,7 @@ class RecipeViewSet(ModelViewSet):
             if Favorite.objects.filter(user=user, recipe=recipe).exists():
                 return Response(status=HTTP_400_BAD_REQUEST)
             Favorite.objects.create(user=user, recipe=recipe)
-            serializer = FavoriteShoppingCartSerializer(recipe)
+            serializer = ShortRecipeInfoSerializer(recipe)
             return Response(serializer.data)
 
         if request.method == 'DELETE':

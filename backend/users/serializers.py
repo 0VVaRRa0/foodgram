@@ -1,8 +1,10 @@
+# from django.shortcuts import get_object_or_404
 from djoser.serializers import UserSerializer as BaseUserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework.serializers import SerializerMethodField
 
 from .models import CustomUser
+# from cookbook.serializers import ShortRecipeInfoSerializer
 
 
 class UserSerializer(BaseUserSerializer):
@@ -23,11 +25,15 @@ class UserSerializer(BaseUserSerializer):
 
     def get_is_subscribed(self, obj):
         return False
-    #     request = self.context.get('request')
-    #     if not request or not hasattr(request, 'user'):
-    #         return False
-    #     current_user = request.user
-    #     return Subscription.objects.filter(
-    #         subscriber=current_user,
-    #         author=obj
-    #     ).exists()
+
+
+class ExtendedUserSerializer(UserSerializer):
+    # recipes = ShortRecipeInfoSerializer(many=True, read_only=True)
+    # recipes_count = SerializerMethodField()
+
+    class Meta(UserSerializer.Meta):
+        fields = UserSerializer.Meta.fields
+
+    # def get_recipes_count(self, obj):
+    #     user = get_object_or_404(CustomUser, id=obj.id)
+    #     return user.recipes.count()

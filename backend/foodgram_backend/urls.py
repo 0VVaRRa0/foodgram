@@ -10,18 +10,18 @@ from cookbook.views import (
     RecipeViewSet,
     ShortLinkRedirectView
 )
-from users.views import AvatarUpdate
+from users.views import AvatarUpdate, CustomUserVIewSet
 
 router = DefaultRouter()
 router.register('tags', TagViewSet)
 router.register('ingredients', IngredientViewSet)
 router.register('recipes', RecipeViewSet)
+router.register('users', CustomUserVIewSet)
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
-    path('api/', include('djoser.urls')),
     path('s/<str:short_link>/', ShortLinkRedirectView.as_view()),
     path('api/users/me/avatar/', AvatarUpdate.as_view()),
     path('api/auth/', include('djoser.urls.authtoken')),
