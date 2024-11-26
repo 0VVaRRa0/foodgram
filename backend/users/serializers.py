@@ -23,6 +23,8 @@ class UserSerializer(BaseUserSerializer):
 
     def get_is_subscribed(self, obj):
         follower = self.context['request'].user
+        if not follower.id:
+            return False
         following = CustomUser.objects.get(id=obj.id)
         if Subscription.objects.filter(
             follower=follower, following=following
