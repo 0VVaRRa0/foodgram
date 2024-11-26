@@ -1,4 +1,6 @@
 from hashids import Hashids
+from django.db.models import Sum
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views import View
 from rest_framework.decorators import action
@@ -21,7 +23,7 @@ from .serializers import (
     ShortLinkSerializer,
     ShortRecipeInfoSerializer
 )
-from .utils import generate_short_link
+from .utils import generate_short_link, generate_shopping_cart_file
 
 
 class TagViewSet(ReadOnlyModelViewSet):
@@ -83,16 +85,19 @@ class RecipeViewSet(ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='download_shopping_cart')
     def download_shopping_cart(self, request):
-        pass
-        # user = request.user
-        # cart, _ = ShoppingCart.objects.get_or_create(user=user)
-        # for recipe in cart.recipe.all():
-        #     for recipeingredient in recipe.recipeingredient_set.all():
-        #         ingredient = recipeingredient.ingredient
-        #         measurement_unit = recipeingredient.ingredient.measurement_unit
-        #         amount = recipeingredient.amount
-        #         print(f'{ingredient}: {amount} {measurement_unit}')
-        # return Response(status=200)
+        user = request.user
+        cart, _ = ShoppingCart.objects.prefetch_related(
+            'recipe__recipeingredient_set__ingredient'
+        ).get_or_create(user=user)
+        ingredients = cart.recipe.values(
+            'recipeingredient__ingredient__name',
+            'recipeingredient__ingredient__measurement_unit'
+        ).annotate(total_amount=Sum('recipeingredient__amount'))
+        csv_file = generate_shopping_cart_file(ingredients)
+        response = HttpResponse(csv_file, content_type='text/csv')
+        response['Content-Disposition'] = (
+            'attachment; filename="shopping_cart.csv"')
+        return response
 
     @action(detail=True, methods=['post', 'delete'], url_path='favorite')
     def favorite(self, request, pk):
