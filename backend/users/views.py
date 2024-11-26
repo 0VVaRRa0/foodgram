@@ -46,6 +46,9 @@ class CustomUserVIewSet(UserViewSet):
         follower = request.user
         following = get_object_or_404(User, id=id)
 
+        if follower == following:
+            return Response(status=HTTP_400_BAD_REQUEST)
+
         if request.method == 'POST':
             subscription, created = Subscription.objects.get_or_create(
                 follower=follower, following=following)
@@ -54,3 +57,9 @@ class CustomUserVIewSet(UserViewSet):
             # serializer = ExtendedUserSerializer(following)
             # return Response(serializer.data)
             return Response(status=201)
+
+        elif request.method == 'DELETE':
+            subscription = get_object_or_404(
+                Subscription, follower=follower, following=following)
+            subscription.delete()
+            return Response(status=HTTP_204_NO_CONTENT)

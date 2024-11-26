@@ -3,7 +3,7 @@ from djoser.serializers import UserSerializer as BaseUserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework.serializers import SerializerMethodField
 
-from .models import CustomUser
+from .models import CustomUser, Subscription
 # from cookbook.serializers import ShortRecipeInfoSerializer
 
 
@@ -24,6 +24,12 @@ class UserSerializer(BaseUserSerializer):
         )
 
     def get_is_subscribed(self, obj):
+        follower = self.context['request'].user
+        following = CustomUser.objects.get(id=obj.id)
+        if Subscription.objects.filter(
+            follower=follower, following=following
+        ).exists():
+            return True
         return False
 
 
