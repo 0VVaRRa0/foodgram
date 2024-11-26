@@ -1,13 +1,15 @@
+import re
+
 from djoser.serializers import UserSerializer as BaseUserSerializer
 from drf_extra_fields.fields import Base64ImageField
-from rest_framework.serializers import SerializerMethodField
+from rest_framework import serializers
 
 from .models import CustomUser, Subscription
 
 
 class UserSerializer(BaseUserSerializer):
     avatar = Base64ImageField(required=False)
-    is_subscribed = SerializerMethodField()
+    is_subscribed = serializers.SerializerMethodField()
 
     class Meta(BaseUserSerializer.Meta):
         model = CustomUser
@@ -30,10 +32,17 @@ class UserSerializer(BaseUserSerializer):
             return True
         return False
 
+    def validate_username(self, value):
+        if not re.match(r'^[\w.@+-]+\Z', value):
+            raise serializers.ValidationError(
+                'Использованы недопустимые символы'
+            )
+        return value
+
 
 class ExtendedUserSerializer(UserSerializer):
-    recipes = SerializerMethodField()
-    recipes_count = SerializerMethodField()
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
 
     class Meta(UserSerializer.Meta):
         fields = UserSerializer.Meta.fields + ('recipes', 'recipes_count')
