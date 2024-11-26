@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 
+from .validators import validate_username
 from .utils import avatar_upload_path
 
 
@@ -36,7 +37,10 @@ class CustomUserManager(BaseUserManager):
 
 
 class CustomUser(AbstractUser):
-    username = models.CharField(max_length=150, unique=True, blank=False)
+    username = models.CharField(
+        max_length=150, unique=True,
+        blank=False, validators=[validate_username]
+    )
     email = models.EmailField(unique=True, blank=False)
     first_name = models.CharField(max_length=30, blank=False)
     last_name = models.CharField(max_length=30, blank=False)

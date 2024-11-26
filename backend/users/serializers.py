@@ -1,5 +1,3 @@
-import re
-
 from djoser.serializers import UserSerializer as BaseUserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
@@ -31,13 +29,6 @@ class UserSerializer(BaseUserSerializer):
         ).exists():
             return True
         return False
-
-    def validate_username(self, value):
-        if not re.match(r'^[\w.@+-]+\Z', value):
-            raise serializers.ValidationError(
-                'Использованы недопустимые символы'
-            )
-        return value
 
 
 class ExtendedUserSerializer(UserSerializer):
