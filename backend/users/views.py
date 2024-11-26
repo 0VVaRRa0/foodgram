@@ -1,14 +1,15 @@
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
+from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST
 )
-from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .serializers import UserSerializer, ExtendedUserSerializer
@@ -68,6 +69,15 @@ class CustomUserVIewSet(UserViewSet):
     def get_subscriptions(self, request):
         subscriptions = request.user.following.all()
         followings = [subscription.following for subscription in subscriptions]
+        paginator = PageNumberPagination()
+        paginator.page_size_query_param = 'limit'
+        paginator.page_query_param = 'page'
+        paginated_followings = paginator.paginate_queryset(
+            followings, request, view=self)
+        recipes_limit = request.query_params.get('recipes_limit')
         serializer = ExtendedUserSerializer(
-            followings, many=True, context={'request': request})
-        return Response(serializer.data)
+            paginated_followings,
+            many=True,
+            context={'request': request, 'recipes_limit': recipes_limit},
+        )
+        return paginator.get_paginated_response(serializer.data)

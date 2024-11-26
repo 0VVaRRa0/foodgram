@@ -43,4 +43,8 @@ class ExtendedUserSerializer(UserSerializer):
 
     def get_recipes(self, obj):
         from cookbook.serializers import ShortRecipeInfoSerializer
-        return ShortRecipeInfoSerializer(obj.recipes.all(), many=True).data
+        recipes_limit = self.context.get('recipes_limit')
+        recipes = obj.recipes.all()
+        if recipes_limit:
+            recipes = recipes[:int(recipes_limit)]
+        return ShortRecipeInfoSerializer(recipes, many=True).data
