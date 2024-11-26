@@ -11,7 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .serializers import UserSerializer  # , ExtendedUserSerializer
+from .serializers import UserSerializer, ExtendedUserSerializer
 from .models import Subscription
 
 
@@ -54,9 +54,9 @@ class CustomUserVIewSet(UserViewSet):
                 follower=follower, following=following)
             if not created:
                 return Response(status=HTTP_400_BAD_REQUEST)
-            # serializer = ExtendedUserSerializer(following)
-            # return Response(serializer.data)
-            return Response(status=201)
+            serializer = ExtendedUserSerializer(
+                following, context={'request': request})
+            return Response(serializer.data)
 
         elif request.method == 'DELETE':
             subscription = get_object_or_404(

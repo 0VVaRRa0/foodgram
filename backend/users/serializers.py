@@ -1,4 +1,3 @@
-# from django.shortcuts import get_object_or_404
 from djoser.serializers import UserSerializer as BaseUserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework.serializers import SerializerMethodField
@@ -34,12 +33,15 @@ class UserSerializer(BaseUserSerializer):
 
 
 class ExtendedUserSerializer(UserSerializer):
-    # recipes = ShortRecipeInfoSerializer(many=True, read_only=True)
-    # recipes_count = SerializerMethodField()
+    recipes = SerializerMethodField()
+    recipes_count = SerializerMethodField()
 
     class Meta(UserSerializer.Meta):
-        fields = UserSerializer.Meta.fields
+        fields = UserSerializer.Meta.fields + ('recipes', 'recipes_count')
 
-    # def get_recipes_count(self, obj):
-    #     user = get_object_or_404(CustomUser, id=obj.id)
-    #     return user.recipes.count()
+    def get_recipes_count(self, obj):
+        return obj.recipes.count()
+
+    def get_recipes(self, obj):
+        from cookbook.serializers import ShortRecipeInfoSerializer
+        return ShortRecipeInfoSerializer(obj.recipes.all(), many=True).data
