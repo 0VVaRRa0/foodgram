@@ -12,8 +12,9 @@ from rest_framework.status import (
 )
 from rest_framework.views import APIView
 
-from .serializers import UserSerializer, ExtendedUserSerializer
 from .models import Subscription
+from .permissions import IsOwnerOrAdminOrReadOnly
+from .serializers import UserSerializer, ExtendedUserSerializer
 
 
 User = get_user_model()
@@ -41,6 +42,7 @@ class AvatarUpdate(APIView):
 
 
 class CustomUserVIewSet(UserViewSet):
+    permission_classes = [IsOwnerOrAdminOrReadOnly]
 
     @action(detail=True, methods=['post', 'delete'], url_path='subscribe')
     def subscribtions(self, request, id):
