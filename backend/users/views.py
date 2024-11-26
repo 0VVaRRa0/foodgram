@@ -63,3 +63,11 @@ class CustomUserVIewSet(UserViewSet):
                 Subscription, follower=follower, following=following)
             subscription.delete()
             return Response(status=HTTP_204_NO_CONTENT)
+
+    @action(detail=False, methods=['get'], url_path='subscriptions')
+    def get_subscriptions(self, request):
+        subscriptions = request.user.following.all()
+        followings = [subscription.following for subscription in subscriptions]
+        serializer = ExtendedUserSerializer(
+            followings, many=True, context={'request': request})
+        return Response(serializer.data)
