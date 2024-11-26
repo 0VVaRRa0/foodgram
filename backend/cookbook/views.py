@@ -81,6 +81,19 @@ class RecipeViewSet(ModelViewSet):
             cart.recipe.remove(recipe)
             return Response(status=HTTP_204_NO_CONTENT)
 
+    @action(detail=False, methods=['get'], url_path='download_shopping_cart')
+    def download_shopping_cart(self, request):
+        pass
+        # user = request.user
+        # cart, _ = ShoppingCart.objects.get_or_create(user=user)
+        # for recipe in cart.recipe.all():
+        #     for recipeingredient in recipe.recipeingredient_set.all():
+        #         ingredient = recipeingredient.ingredient
+        #         measurement_unit = recipeingredient.ingredient.measurement_unit
+        #         amount = recipeingredient.amount
+        #         print(f'{ingredient}: {amount} {measurement_unit}')
+        # return Response(status=200)
+
     @action(detail=True, methods=['post', 'delete'], url_path='favorite')
     def favorite(self, request, pk):
         user = request.user
