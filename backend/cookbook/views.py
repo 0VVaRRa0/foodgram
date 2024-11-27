@@ -133,7 +133,7 @@ class RecipeViewSet(ModelViewSet):
                 return Response(status=HTTP_400_BAD_REQUEST)
             Favorite.objects.create(user=user, recipe=recipe)
             serializer = ShortRecipeInfoSerializer(recipe)
-            return Response(serializer.data)
+            return Response(serializer.data, status=HTTP_201_CREATED)
 
         if request.method == 'DELETE':
             favorite = get_object_or_404(Favorite, user=user, recipe=recipe)
