@@ -71,8 +71,11 @@ class CustomUserVIewSet(UserViewSet):
                 follower=follower, following=following)
             if not created:
                 return Response(status=HTTP_400_BAD_REQUEST)
+            recipes_limit = request.query_params.get('recipes_limit')
             serializer = ExtendedUserSerializer(
-                following, context={'request': request})
+                following,
+                context={'request': request, 'recipes_limit': recipes_limit}
+            )
             return Response(serializer.data, status=HTTP_201_CREATED)
 
         elif request.method == 'DELETE':
@@ -86,7 +89,7 @@ class CustomUserVIewSet(UserViewSet):
 
     @action(detail=False, methods=['get'], url_path='subscriptions')
     def get_subscriptions(self, request):
-        subscriptions = request.user.following.all()
+        subscriptions = request.user.followers.all()
         followings = [subscription.following for subscription in subscriptions]
         paginator = PageNumberPagination()
         paginator.page_size_query_param = 'limit'
