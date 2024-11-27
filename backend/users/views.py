@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
 from rest_framework.decorators import action
+from rest_framework.exceptions import NotAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -24,6 +25,12 @@ User = get_user_model()
 
 class CustomUserVIewSet(UserViewSet):
     permission_classes = [IsOwnerOrAdminOrReadOnly]
+
+    @action(['get'], detail=False)
+    def me(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            raise NotAuthenticated()
+        return super().me(request, *args, **kwargs)
 
     @action(
         detail=False, methods=['put', 'delete'],
