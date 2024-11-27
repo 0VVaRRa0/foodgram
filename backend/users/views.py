@@ -1,8 +1,9 @@
 from django.contrib.auth import get_user_model
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
 from rest_framework.decorators import action
-from rest_framework.exceptions import NotAuthenticated
+from rest_framework.exceptions import NotAuthenticated, ValidationError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -75,8 +76,11 @@ class CustomUserVIewSet(UserViewSet):
             return Response(serializer.data, status=HTTP_201_CREATED)
 
         elif request.method == 'DELETE':
-            subscription = get_object_or_404(
-                Subscription, follower=follower, following=following)
+            try:
+                subscription = get_object_or_404(
+                    Subscription, follower=follower, following=following)
+            except Http404:
+                raise ValidationError('Вы не подписаны на пользователя')
             subscription.delete()
             return Response(status=HTTP_204_NO_CONTENT)
 
