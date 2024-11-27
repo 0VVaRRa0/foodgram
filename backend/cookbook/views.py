@@ -16,7 +16,7 @@ from rest_framework.status import (
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from .constants import SHORT_LINK_MIN_LENGTH
-from .filters import RecipeFilter
+from .filters import RecipeFilter, IngredientFilter
 from .models import Tag, Ingredient, Recipe, ShortLink, ShoppingCart, Favorite
 from .serializers import (
     TagSerializer,
@@ -42,6 +42,8 @@ class IngredientViewSet(ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     permission_classes = (AllowAny,)
     pagination_class = None
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = IngredientFilter
 
 
 class RecipeViewSet(ModelViewSet):
