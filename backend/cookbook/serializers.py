@@ -1,3 +1,4 @@
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
@@ -130,10 +131,6 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredients')
-        print(ingredients)
-        if ingredients == []:
-            raise serializers.ValidationError(
-                {'ingredients': ['Обязательное поле.']})
         tags_data = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
         self.create_ingredients(recipe=recipe, ingredients=ingredients)
@@ -154,6 +151,42 @@ class RecipeSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         context = {'request': request}
         return GetRecipesSerializer(instance, context=context).data
+
+    def validate(self, data):
+        ingredients = self.initial_data.get('ingredients')
+        if not ingredients:
+            raise serializers.ValidationError({
+                'ingredients': 'Добавьте хотя бы один ингредиент'})
+        tags = self.initial_data.get('tags')
+        if not tags:
+            raise serializers.ValidationError(
+                {'tags': 'Добавьте хотя бы один тег'})
+        if len(data['tags']) > len(set(data['tags'])):
+            raise serializers.ValidationError(
+                {'tags': 'Теги не могут повторяться'})
+        ingredient_list = []
+        for ingredient_item in ingredients:
+            try:
+                ingredient = get_object_or_404(
+                    Ingredient, id=ingredient_item['id'])
+            except Http404:
+                raise serializers.ValidationError(
+                    {'ingredients': 'Ингредиента с таким id не существует'})
+            if ingredient in ingredient_list:
+                raise serializers.ValidationError(
+                    {'ingredients': 'Ингредиенты должны быть уникальными'})
+            ingredient_list.append(ingredient)
+            if int(ingredient_item['amount']) < 1:
+                raise serializers.ValidationError(
+                    {
+                        'ingredients':
+                        'Убедитесь, что количество ингредиента больше 0'
+                    }
+                )
+        if not data['image']:
+            raise serializers.ValidationError({'image': 'Обязательное поле '})
+        data['ingredients'] = ingredients
+        return data
 
 
 class ShortLinkSerializer(serializers.ModelSerializer):
