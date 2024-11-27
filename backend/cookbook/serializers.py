@@ -130,6 +130,10 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredients')
+        print(ingredients)
+        if ingredients == []:
+            raise serializers.ValidationError(
+                {'ingredients': ['Обязательное поле.']})
         tags_data = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
         self.create_ingredients(recipe=recipe, ingredients=ingredients)
