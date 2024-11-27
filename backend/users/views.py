@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import (
     HTTP_200_OK,
+    HTTP_201_CREATED,
     HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST
 )
@@ -57,6 +58,8 @@ class CustomUserVIewSet(UserViewSet):
     @action(detail=True, methods=['post', 'delete'], url_path='subscribe')
     def subscribtions(self, request, id):
         follower = request.user
+        if not follower.is_authenticated:
+            raise NotAuthenticated()
         following = get_object_or_404(User, id=id)
 
         if follower == following:
@@ -69,7 +72,7 @@ class CustomUserVIewSet(UserViewSet):
                 return Response(status=HTTP_400_BAD_REQUEST)
             serializer = ExtendedUserSerializer(
                 following, context={'request': request})
-            return Response(serializer.data)
+            return Response(serializer.data, status=HTTP_201_CREATED)
 
         elif request.method == 'DELETE':
             subscription = get_object_or_404(
