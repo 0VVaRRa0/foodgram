@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.views import View
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 from rest_framework.permissions import AllowAny, SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.status import (
@@ -62,6 +62,14 @@ class RecipeViewSet(ModelViewSet):
         if not self.request.user.is_authenticated:
             raise AuthenticationFailed()
         return serializer.save(author=self.request.user)
+
+    def perform_update(self, serializer):
+        if not self.request.user.is_authenticated:
+            raise AuthenticationFailed("User is not authenticated.")
+        recipe_instance = serializer.instance
+        if recipe_instance.author != self.request.user:
+            raise PermissionDenied()
+        super().perform_update(serializer)
 
     @action(detail=True, methods=['get'], url_path='get-link')
     def get_short_link(self, request, pk):
