@@ -50,3 +50,18 @@ class ExtendedUserSerializer(UserSerializer):
         if recipes_limit:
             recipes = recipes[:int(recipes_limit)]
         return ShortRecipeInfoSerializer(recipes, many=True).data
+
+
+class AvatarSerializer(serializers.ModelSerializer):
+    avatar = Base64ImageField()
+
+    class Meta:
+        model = CustomUser
+        fields = ('avatar',)
+
+    def validate(self, data):
+        avatar = data.get('avatar')
+        if not avatar:
+            raise serializers.ValidationError(
+                {"avatar": "Поле 'avatar' не может быть пустым."})
+        return data

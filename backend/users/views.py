@@ -10,39 +10,42 @@ from rest_framework.status import (
     HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST
 )
-from rest_framework.views import APIView
 
 from .models import Subscription
 from .permissions import IsOwnerOrAdminOrReadOnly
-from .serializers import UserSerializer, ExtendedUserSerializer
+from .serializers import (
+    AvatarSerializer,
+    ExtendedUserSerializer
+)
 
 
 User = get_user_model()
 
 
-class AvatarUpdate(APIView):
-    permission_classes = (IsAuthenticated,)
-
-    def put(self, request):
-        serializer = UserSerializer(
-            instance=request.user,
-            data=request.data,
-            partial=True,
-            context={'request': request}
-        )
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=HTTP_200_OK)
-        return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
-
-    def delete(self, request):
-        request.user.avatar = None
-        request.user.save()
-        return Response(status=HTTP_204_NO_CONTENT)
-
-
 class CustomUserVIewSet(UserViewSet):
     permission_classes = [IsOwnerOrAdminOrReadOnly]
+
+    @action(
+        detail=False, methods=['put', 'delete'],
+        url_path='me/avatar', permission_classes=[IsAuthenticated]
+    )
+    def create_destroy_avatar(self, request):
+        user = get_object_or_404(User, id=request.user.id)
+
+        if request.method == 'PUT':
+            serializer = AvatarSerializer(
+                instance=request.user, partial=True,
+                data=request.data, context={'request': request}
+            )
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=HTTP_200_OK)
+            return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
+
+        if request.method == 'DELETE':
+            user.avatar = None
+            user.save()
+            return Response(status=HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=['post', 'delete'], url_path='subscribe')
     def subscribtions(self, request, id):
