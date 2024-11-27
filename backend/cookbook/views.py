@@ -3,6 +3,7 @@ from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views import View
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, SAFE_METHODS
 from rest_framework.response import Response
@@ -14,6 +15,7 @@ from rest_framework.status import (
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from .constants import SHORT_LINK_MIN_LENGTH
+from .filters import RecipeFilter
 from .models import Tag, Ingredient, Recipe, ShortLink, ShoppingCart, Favorite
 from .serializers import (
     TagSerializer,
@@ -24,6 +26,7 @@ from .serializers import (
     ShortRecipeInfoSerializer
 )
 from .utils import generate_short_link, generate_shopping_cart_file
+from foodgram_backend.paginators import CustomPagination
 
 
 class TagViewSet(ReadOnlyModelViewSet):
@@ -43,6 +46,9 @@ class IngredientViewSet(ReadOnlyModelViewSet):
 class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
     permission_classes = (AllowAny,)
+    pagination_class = CustomPagination
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = RecipeFilter
 
     def get_serializer_class(self):
         if self.request.method in SAFE_METHODS:
