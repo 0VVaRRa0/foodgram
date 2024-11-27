@@ -1,11 +1,12 @@
 from hashids import Hashids
 from django.db.models import Sum
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404, redirect
 from django.views import View
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
-from rest_framework.exceptions import NotAuthenticated, PermissionDenied
+from rest_framework.exceptions import (
+    NotAuthenticated, PermissionDenied, ValidationError)
 from rest_framework.permissions import AllowAny, SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.status import (
@@ -72,6 +73,15 @@ class RecipeViewSet(ModelViewSet):
             raise PermissionDenied()
         super().perform_update(serializer)
 
+    def destroy(self, request, *args, **kwargs):
+        recipe = self.get_object()
+        if not self.request.user.is_authenticated:
+            raise NotAuthenticated()
+        if self.request.user is not recipe.author:
+            raise PermissionDenied()
+        recipe.delete()
+        return Response(status=HTTP_204_NO_CONTENT)
+
     @action(detail=True, methods=['get'], url_path='get-link')
     def get_short_link(self, request, pk):
         recipe = self.get_object()
@@ -136,7 +146,11 @@ class RecipeViewSet(ModelViewSet):
             return Response(serializer.data, status=HTTP_201_CREATED)
 
         if request.method == 'DELETE':
-            favorite = get_object_or_404(Favorite, user=user, recipe=recipe)
+            try:
+                favorite = get_object_or_404(
+                    Favorite, user=user, recipe=recipe)
+            except Http404:
+                raise ValidationError('Рецепт ещё не добавлен в избранное')
             favorite.delete()
             return Response(status=HTTP_204_NO_CONTENT)
 
