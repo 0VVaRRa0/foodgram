@@ -77,7 +77,7 @@ class RecipeViewSet(ModelViewSet):
         recipe = self.get_object()
         if not self.request.user.is_authenticated:
             raise NotAuthenticated()
-        if self.request.user is not recipe.author:
+        if self.request.user != recipe.author:
             raise PermissionDenied()
         recipe.delete()
         return Response(status=HTTP_204_NO_CONTENT)
