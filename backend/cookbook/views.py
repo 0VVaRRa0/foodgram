@@ -5,10 +5,11 @@ from django.shortcuts import get_object_or_404, redirect
 from django.views import View
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
-from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
+from rest_framework.exceptions import NotAuthenticated, PermissionDenied
 from rest_framework.permissions import AllowAny, SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.status import (
+    HTTP_201_CREATED,
     HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND
@@ -60,12 +61,12 @@ class RecipeViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         if not self.request.user.is_authenticated:
-            raise AuthenticationFailed()
+            raise NotAuthenticated()
         return serializer.save(author=self.request.user)
 
     def perform_update(self, serializer):
         if not self.request.user.is_authenticated:
-            raise AuthenticationFailed("User is not authenticated.")
+            raise NotAuthenticated()
         recipe_instance = serializer.instance
         if recipe_instance.author != self.request.user:
             raise PermissionDenied()
@@ -84,6 +85,8 @@ class RecipeViewSet(ModelViewSet):
     @action(detail=True, methods=['post', 'delete'], url_path='shopping_cart')
     def shopping_cart(self, request, pk):
         user = request.user
+        if not user.is_authenticated:
+            raise NotAuthenticated()
         recipe = get_object_or_404(Recipe, id=pk)
 
         if request.method == 'POST':
@@ -93,7 +96,7 @@ class RecipeViewSet(ModelViewSet):
             cart.recipe.add(recipe)
             serializer = ShortRecipeInfoSerializer(
                 recipe, context={'request': request})
-            return Response(serializer.data)
+            return Response(serializer.data, status=HTTP_201_CREATED)
 
         elif request.method == 'DELETE':
             cart = get_object_or_404(ShoppingCart, user=user)
@@ -121,6 +124,8 @@ class RecipeViewSet(ModelViewSet):
     @action(detail=True, methods=['post', 'delete'], url_path='favorite')
     def favorite(self, request, pk):
         user = request.user
+        if not user.is_authenticated:
+            raise NotAuthenticated()
         recipe = get_object_or_404(Recipe, id=pk)
 
         if request.method == 'POST':
