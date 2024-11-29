@@ -140,3 +140,7 @@ dmypy.json
 
 static/
 media/
+
+#other files
+migrations.ps1
+db.json
