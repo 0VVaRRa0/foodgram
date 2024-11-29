@@ -1,9 +1,12 @@
+import os
+
 from hashids import Hashids
 from django.db.models import Sum
 from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404, redirect
 from django.views import View
 from django_filters.rest_framework import DjangoFilterBackend
+from dotenv import load_dotenv
 from rest_framework.decorators import action
 from rest_framework.exceptions import (
     NotAuthenticated, PermissionDenied, ValidationError)
@@ -17,7 +20,6 @@ from rest_framework.status import (
 )
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-from .constants import SHORT_LINK_MIN_LENGTH
 from .filters import RecipeFilter, IngredientFilter
 from .models import Tag, Ingredient, Recipe, ShortLink, ShoppingCart, Favorite
 from .serializers import (
@@ -30,6 +32,10 @@ from .serializers import (
 )
 from .utils import generate_short_link, generate_shopping_cart_file
 from foodgram_backend.paginators import CustomPagination
+
+
+load_dotenv()
+SHORT_LINK_MIN_LENGTH = os.getenv('SHORT_LINK_MIN_LENGTH', 3)
 
 
 class TagViewSet(ReadOnlyModelViewSet):

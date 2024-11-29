@@ -1,10 +1,15 @@
 import csv
+import os
 
 import pandas as pd
+from dotenv import load_dotenv
 from hashids import Hashids
 
-from .constants import SHORT_LINK_MIN_LENGTH
 from .models import Ingredient
+
+
+load_dotenv()
+SHORT_LINK_MIN_LENGTH = os.getenv('SHORT_LINK_MIN_LENGTH', 3)
 
 
 def generate_short_link(obj_id):

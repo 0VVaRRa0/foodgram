@@ -1,9 +1,11 @@
+import os
+
 from django.http import Http404
 from django.shortcuts import get_object_or_404
+from dotenv import load_dotenv
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
-from .constants import SITE_URL
 from .models import (
     Ingredient,
     Tag,
@@ -14,6 +16,10 @@ from .models import (
     Favorite
 )
 from users.serializers import UserSerializer
+
+
+load_dotenv()
+SITE_URL = os.getenv('SITE_URL')
 
 
 class TagSerializer(serializers.ModelSerializer):
