@@ -15,7 +15,7 @@ services:
       - pg_data:/var/lib/postgresql/data
 
   backend:
-    build: ./backend/
+    image: vvarra:foodgram-backend:latest
     container_name: backend
     env_file: .env
     volumes:
@@ -25,7 +25,7 @@ services:
       - db
 
   frontend:
-    build: ./frontend/
+    image: vvarra:foodgram-frontend:latest
     container_name: frontend
     env_file: .env
     command: cp -r /app/build/. /frontend_static/
@@ -34,7 +34,7 @@ services:
 
 
   nginx:
-    build: ./infra/
+    image: vvarra:foodgram-gateway:latest
     container_name: nginx
     env_file: .env
     ports:
