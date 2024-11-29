@@ -8,6 +8,7 @@ services:
 
   db:
     image: postgres:13.10
+    container_name: db
     env_file:
       - .env
     volumes:
@@ -15,6 +16,7 @@ services:
 
   backend:
     build: ./backend/
+    container_name: backend
     env_file: .env
     volumes:
       - static:/backend_static
@@ -24,6 +26,7 @@ services:
 
   frontend:
     build: ./frontend/
+    container_name: frontend
     env_file: .env
     command: cp -r /app/build/. /frontend_static/
     volumes:
@@ -32,6 +35,7 @@ services:
 
   nginx:
     build: ./infra/
+    container_name: nginx
     env_file: .env
     ports:
       - 8080:80
