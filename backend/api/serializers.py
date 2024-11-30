@@ -190,10 +190,8 @@ class RecipeSerializer(serializers.ModelSerializer):
         ingredients = validated_data.pop('ingredients')
         instance.tags.set(tags)
         RecipeIngredient.objects.filter(recipe=instance).delete()
-        super().update(instance, validated_data)
         self.create_ingredients(ingredients, instance)
-        instance.save()
-        return instance
+        return super().update(instance, validated_data)
 
     def to_representation(self, instance):
         request = self.context.get('request')
@@ -246,7 +244,7 @@ class ShortLinkSerializer(serializers.ModelSerializer):
         fields = ('short_link',)
 
     def get_short_link(self, obj):
-        return f'{SITE_URL}/s/{obj.short_link}'
+        return f'{SITE_URL}/s/{obj.short_link}/'
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
