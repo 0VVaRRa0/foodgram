@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.db.models import Count
 
-from .models import Ingredient, Tag, Recipe
+from .models import Ingredient, Recipe, Tag
 
 
 class IngredientAdmin(admin.ModelAdmin):

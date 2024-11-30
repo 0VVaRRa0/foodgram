@@ -8,16 +8,9 @@ from dotenv import load_dotenv
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
-from cookbook.models import (
-    Ingredient,
-    Tag,
-    Recipe,
-    RecipeIngredient,
-    ShoppingCart,
-    Favorite
-)
+from cookbook.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
+                             ShoppingCart, Tag)
 from users.models import Subscription
-
 
 load_dotenv()
 SITE_URL = os.getenv('SITE_URL')

@@ -1,45 +1,34 @@
 import os
 
 from django.contrib.auth import get_user_model
-from django.http import HttpResponse, Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views import View
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from dotenv import load_dotenv
 from rest_framework.decorators import action
-from rest_framework.exceptions import (
-    NotAuthenticated, PermissionDenied, ValidationError)
+from rest_framework.exceptions import (NotAuthenticated, PermissionDenied,
+                                       ValidationError)
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import AllowAny, IsAuthenticated, SAFE_METHODS
+from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.status import (
-    HTTP_200_OK,
-    HTTP_201_CREATED,
-    HTTP_204_NO_CONTENT,
-    HTTP_400_BAD_REQUEST,
-)
+from rest_framework.status import (HTTP_200_OK, HTTP_201_CREATED,
+                                   HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST)
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-from .filters import RecipeFilter, IngredientFilter
-from .paginators import CustomPagination
-from .permissions import IsOwnerOrAdminOrReadOnly
-from .serializers import (
-    AvatarSerializer,
-    ExtendedUserSerializer,
-    TagSerializer,
-    IngredientSerializer,
-    GetRecipesSerializer,
-    RecipeSerializer,
-    ShortLinkSerializer,
-    ShortRecipeInfoSerializer
-)
-from .utils import generate_short_link, generate_shopping_cart_file
-from cookbook.models import (
-    Tag, Ingredient, Recipe, RecipeIngredient, ShoppingCart, Favorite
-)
+from cookbook.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
+                             ShoppingCart, Tag)
 from users.models import Subscription
 
+from .filters import IngredientFilter, RecipeFilter
+from .paginators import CustomPagination
+from .permissions import IsOwnerOrAdminOrReadOnly
+from .serializers import (AvatarSerializer, ExtendedUserSerializer,
+                          GetRecipesSerializer, IngredientSerializer,
+                          RecipeSerializer, ShortLinkSerializer,
+                          ShortRecipeInfoSerializer, TagSerializer)
+from .utils import generate_shopping_cart_file, generate_short_link
 
 User = get_user_model()
 load_dotenv()

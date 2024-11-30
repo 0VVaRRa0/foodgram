@@ -5,7 +5,6 @@ import pandas as pd
 from dotenv import load_dotenv
 from hashids import Hashids
 
-
 load_dotenv()
 SHORT_LINK_MIN_LENGTH = os.getenv('SHORT_LINK_MIN_LENGTH', 3)
 

@@ -1,8 +1,9 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 
-from .validators import validate_username
 from api.utils import avatar_upload_path
+
+from .validators import validate_username
 
 
 class CustomUserManager(BaseUserManager):
