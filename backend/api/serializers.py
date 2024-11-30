@@ -1,5 +1,6 @@
 import os
 
+from django.contrib.auth import get_user_model
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserSerializer as BaseUserSerializer
@@ -16,11 +17,12 @@ from cookbook.models import (
     ShoppingCart,
     Favorite
 )
-from users.models import CustomUser, Subscription
+from users.models import Subscription
 
 
 load_dotenv()
 SITE_URL = os.getenv('SITE_URL')
+User = get_user_model()
 
 
 class UserSerializer(BaseUserSerializer):
@@ -28,7 +30,7 @@ class UserSerializer(BaseUserSerializer):
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta(BaseUserSerializer.Meta):
-        model = CustomUser
+        model = User
         fields = (
             'email',
             'id',
@@ -43,7 +45,7 @@ class UserSerializer(BaseUserSerializer):
         follower = self.context['request'].user
         if not follower.id:
             return False
-        following = CustomUser.objects.get(id=obj.id)
+        following = User.objects.get(id=obj.id)
         if Subscription.objects.filter(
             follower=follower, following=following
         ).exists():
@@ -77,7 +79,7 @@ class AvatarSerializer(serializers.ModelSerializer):
     avatar = Base64ImageField()
 
     class Meta:
-        model = CustomUser
+        model = User
         fields = ('avatar',)
 
     def validate(self, data):
