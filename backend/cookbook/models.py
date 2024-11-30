@@ -84,38 +84,33 @@ class RecipeIngredient(models.Model):
         )
 
 
-class ShoppingCart(models.Model):
-    user = models.OneToOneField(
-        User, verbose_name='Пользователь', on_delete=models.CASCADE)
-    recipe = models.ManyToManyField(Recipe, verbose_name='Рецепты')
-
-    class Meta:
-        ordering = ('id',)
-        verbose_name = 'Список покупок'
-        verbose_name_plural = 'Списки покупок'
-
-    def __str__(self):
-        return f'Список покупок пользователя {self.user.username}'
-
-
-class Favorite(models.Model):
+class BaseUserRecipeRelation(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        verbose_name='Пользователь',
-        related_name='favorites'
+        verbose_name='Пользователь'
     )
     recipe = models.ForeignKey(
-        Recipe,
+        'Recipe',
         on_delete=models.CASCADE,
-        verbose_name='Рецепт',
-        related_name='favorites'
+        verbose_name='Рецепт'
     )
 
     class Meta:
+        abstract = True
         ordering = ('id',)
-        verbose_name = 'Избранное'
-        verbose_name_plural = 'Избранное'
 
     def __str__(self):
-        return f'Избранное пользователя {self.user.username}'
+        return f'{self._meta.verbose_name} пользователя {self.user.username}'
+
+
+class ShoppingCart(BaseUserRecipeRelation):
+    class Meta:
+        verbose_name = 'Список покупок'
+        verbose_name_plural = 'Списки покупок'
+
+
+class Favorite(BaseUserRecipeRelation):
+    class Meta:
+        verbose_name = 'Избранное'
+        verbose_name_plural = 'Избранное'
