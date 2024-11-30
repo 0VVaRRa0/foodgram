@@ -52,6 +52,8 @@ class Recipe(models.Model):
         Ingredient, through='RecipeIngredient',
         verbose_name='Ингредиент', related_name='recipes'
     )
+    short_link = models.CharField(
+        'Короткая ссылка', max_length=6, null=True, default=None)
 
     class Meta:
         ordering = ('id', 'name')
@@ -79,32 +81,6 @@ class RecipeIngredient(models.Model):
         return (
             f'{self.amount} {self.ingredient.measurement_unit} '
             f'{self.ingredient.name} в рецепте {self.recipe.name}'
-        )
-
-
-class ShortLink(models.Model):
-    recipe = models.OneToOneField(
-        Recipe,
-        on_delete=models.CASCADE,
-        related_name="short_link",
-        verbose_name="Рецепт"
-    )
-    short_link = models.CharField(
-        max_length=10,
-        unique=True,
-        verbose_name="Короткая ссылка"
-    )
-
-    class Meta:
-        ordering = ('id',)
-        verbose_name = 'Короткая ссылка на рецепт'
-        verbose_name_plural = 'Короткие ссылки на рецепты'
-        unique_together = ('recipe', 'short_link')
-
-    def __str__(self):
-        return (
-            f'Короткая ссылка для рецепта {self.recipe.name}: '
-            f'{self.short_link}'
         )
 
 

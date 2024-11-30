@@ -1,6 +1,5 @@
 import os
 
-from hashids import Hashids
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import HttpResponse, Http404
@@ -20,7 +19,6 @@ from rest_framework.status import (
     HTTP_201_CREATED,
     HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
-    HTTP_404_NOT_FOUND
 )
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
@@ -39,7 +37,7 @@ from .serializers import (
 )
 from .utils import generate_short_link, generate_shopping_cart_file
 from cookbook.models import (
-    Tag, Ingredient, Recipe, ShortLink, ShoppingCart, Favorite)
+    Tag, Ingredient, Recipe, ShoppingCart, Favorite)
 from users.models import Subscription
 
 
@@ -181,12 +179,11 @@ class RecipeViewSet(ModelViewSet):
     @action(detail=True, methods=['get'], url_path='get-link')
     def get_short_link(self, request, pk):
         recipe = self.get_object()
-        short_link, created = ShortLink.objects.get_or_create(
-            recipe_id=recipe.id,
-            defaults={'short_link': generate_short_link(recipe.id)}
-        )
-        serializer = ShortLinkSerializer(short_link)
-        return Response(serializer.data)
+        if not recipe.short_link:
+            recipe.short_link = generate_short_link(recipe.id)
+            recipe.save()
+        serializer = ShortLinkSerializer(recipe)
+        return Response(serializer.data, HTTP_200_OK)
 
     @action(detail=True, methods=['post', 'delete'], url_path='shopping_cart')
     def shopping_cart(self, request, pk):
@@ -253,10 +250,5 @@ class RecipeViewSet(ModelViewSet):
 
 class ShortLinkRedirectView(View):
     def get(self, request, short_link):
-        hashids = Hashids(min_length=SHORT_LINK_MIN_LENGTH)
-        try:
-            recipe_id = hashids.decode(short_link)[0]
-        except IndexError:
-            return Response(status=HTTP_404_NOT_FOUND)
-        recipe = get_object_or_404(Recipe, id=recipe_id)
+        recipe = get_object_or_404(Recipe, short_link=short_link)
         return redirect('recipe-detail', pk=recipe.id)

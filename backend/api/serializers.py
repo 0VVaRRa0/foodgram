@@ -13,7 +13,6 @@ from cookbook.models import (
     Tag,
     Recipe,
     RecipeIngredient,
-    ShortLink,
     ShoppingCart,
     Favorite
 )
@@ -267,8 +266,8 @@ class ShortLinkSerializer(serializers.ModelSerializer):
     short_link = serializers.SerializerMethodField()
 
     class Meta:
-        model = ShortLink
-        fields = ['short_link']
+        model = Recipe
+        fields = ('short_link',)
 
     def get_short_link(self, obj):
         return f'{SITE_URL}/s/{obj.short_link}'
