@@ -142,7 +142,7 @@ class GetRecipesSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        ingredients = instance.recipeingredient_set.all()
+        ingredients = instance.recipeingredient.all()
         representation['ingredients'] = GetRecipeIngredientsSerializer(
             ingredients, many=True).data
         return representation
@@ -151,9 +151,7 @@ class GetRecipesSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         if not user.is_authenticated:
             return False
-        cart, _ = ShoppingCart.objects.get_or_create(user=user)
-        recipe = get_object_or_404(Recipe, id=obj.id)
-        if cart.recipe.filter(id=recipe.id).exists():
+        if ShoppingCart.objects.filter(user=user, recipe=obj).exists():
             return True
         return False
 

@@ -1,7 +1,6 @@
 import os
 
 from django.contrib.auth import get_user_model
-from django.db.models import Sum
 from django.http import HttpResponse, Http404
 from django.shortcuts import get_object_or_404, redirect
 from django.views import View
@@ -37,7 +36,8 @@ from .serializers import (
 )
 from .utils import generate_short_link, generate_shopping_cart_file
 from cookbook.models import (
-    Tag, Ingredient, Recipe, ShoppingCart, Favorite)
+    Tag, Ingredient, Recipe, RecipeIngredient, ShoppingCart, Favorite
+)
 from users.models import Subscription
 
 
@@ -193,31 +193,43 @@ class RecipeViewSet(ModelViewSet):
         recipe = get_object_or_404(Recipe, id=pk)
 
         if request.method == 'POST':
-            cart, _ = ShoppingCart.objects.get_or_create(user=user)
-            if cart.recipe.filter(id=recipe.id).exists():
+            cart, created = ShoppingCart.objects.get_or_create(
+                user=user, recipe=recipe)
+            if not created:
                 return Response(status=HTTP_400_BAD_REQUEST)
-            cart.recipe.add(recipe)
             serializer = ShortRecipeInfoSerializer(
                 recipe, context={'request': request})
             return Response(serializer.data, status=HTTP_201_CREATED)
 
         elif request.method == 'DELETE':
-            cart = get_object_or_404(ShoppingCart, user=user)
-            if not cart.recipe.filter(id=recipe.id).exists():
+            if not ShoppingCart.objects.filter(
+                user=user, recipe=recipe
+            ).exists():
                 return Response(status=HTTP_400_BAD_REQUEST)
-            cart.recipe.remove(recipe)
+            ShoppingCart.objects.filter(user=user, recipe=recipe).delete()
             return Response(status=HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['get'], url_path='download_shopping_cart')
     def download_shopping_cart(self, request):
         user = request.user
-        cart, _ = ShoppingCart.objects.prefetch_related(
-            'recipe__recipeingredient_set__ingredient'
-        ).get_or_create(user=user)
-        ingredients = cart.recipe.values(
-            'recipeingredient__ingredient__name',
-            'recipeingredient__ingredient__measurement_unit'
-        ).annotate(total_amount=Sum('recipeingredient__amount'))
+        shopping_cart = ShoppingCart.objects.filter(user=user)
+        recipes_ingredients = RecipeIngredient.objects.filter(
+            recipe__in=shopping_cart.values('recipe')
+        ).select_related('ingredient', 'recipe')
+        ingredient_dict = {}
+        for recipe_ingredient in recipes_ingredients:
+            ingredient_name = recipe_ingredient.ingredient.name
+            amount = recipe_ingredient.amount
+            measurement_unit = recipe_ingredient.ingredient.measurement_unit
+            if ingredient_name in ingredient_dict:
+                ingredient_dict[ingredient_name]['amount'] += amount
+            else:
+                ingredient_dict[ingredient_name] = {
+                    'ingredient': ingredient_name,
+                    'amount': amount,
+                    'measurement_unit': measurement_unit
+                }
+        ingredients = list(ingredient_dict.values())
         csv_file = generate_shopping_cart_file(ingredients)
         response = HttpResponse(csv_file, content_type='text/csv')
         response['Content-Disposition'] = (
