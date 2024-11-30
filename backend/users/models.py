@@ -36,7 +36,7 @@ class CustomUserManager(BaseUserManager):
         return user
 
 
-class CustomUser(AbstractUser):
+class User(AbstractUser):
     username = models.CharField(
         max_length=150, unique=True,
         blank=False, validators=[validate_username]
@@ -60,13 +60,13 @@ class CustomUser(AbstractUser):
 
 class Subscription(models.Model):
     follower = models.ForeignKey(
-        CustomUser,
+        User,
         verbose_name='Подписчик',
         on_delete=models.CASCADE,
         related_name='followers'
     )
     following = models.ForeignKey(
-        CustomUser,
+        User,
         verbose_name='Автор',
         on_delete=models.CASCADE,
         related_name='following'
