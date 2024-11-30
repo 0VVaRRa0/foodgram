@@ -17,6 +17,7 @@ User = get_user_model()
 
 
 class UserSerializer(BaseUserSerializer):
+    """Сериализатор модели пользователей"""
     avatar = Base64ImageField(required=False)
     is_subscribed = serializers.SerializerMethodField()
 
@@ -45,6 +46,7 @@ class UserSerializer(BaseUserSerializer):
 
 
 class ExtendedUserSerializer(UserSerializer):
+    """Расширенный сериализатор модели пользователей"""
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
@@ -67,6 +69,7 @@ class ExtendedUserSerializer(UserSerializer):
 
 
 class AvatarSerializer(serializers.ModelSerializer):
+    """Сериализатор поля 'avatar' пользователей"""
     avatar = Base64ImageField()
 
     class Meta:
@@ -82,7 +85,7 @@ class AvatarSerializer(serializers.ModelSerializer):
 
 
 class TagSerializer(serializers.ModelSerializer):
-    '''Сериализатор для модели Tag'''
+    """Сериализатор модели Tag"""
 
     class Meta:
         model = Tag
@@ -90,7 +93,7 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class IngredientSerializer(serializers.ModelSerializer):
-    '''Сериализатор для модели Ingredient'''
+    """Сериализатор модели Ingredient"""
 
     class Meta:
         model = Ingredient
@@ -98,6 +101,7 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 
 class GetRecipeIngredientsSerializer(serializers.ModelSerializer):
+    """Сериализатор безопасных запросов модели RecipeIngredient"""
     id = serializers.IntegerField(source='ingredient.id', read_only=True)
     name = serializers.CharField(source='ingredient.name', read_only=True)
     measurement_unit = serializers.CharField(
@@ -110,7 +114,7 @@ class GetRecipeIngredientsSerializer(serializers.ModelSerializer):
 
 
 class GetRecipesSerializer(serializers.ModelSerializer):
-    '''Сериализатор для безопасных запросов рецептов'''
+    """Сериализатор безопасных запросов рецептов"""
 
     author = UserSerializer(read_only=True)
     tags = TagSerializer(read_only=True, many=True)
@@ -158,6 +162,7 @@ class GetRecipesSerializer(serializers.ModelSerializer):
 
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
+    """Сериализатор модели RecipeIngredient"""
     id = serializers.IntegerField(write_only=True)
     amount = serializers.IntegerField(write_only=True)
 
@@ -167,6 +172,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
+    """Сериализатор модели рецептов"""
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(), many=True)
     ingredients = RecipeIngredientSerializer(many=True)
@@ -253,6 +259,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class ShortLinkSerializer(serializers.ModelSerializer):
+    """Сериализатор коротких ссылок рецептов"""
     short_link = serializers.SerializerMethodField()
 
     class Meta:
@@ -269,6 +276,7 @@ class ShortLinkSerializer(serializers.ModelSerializer):
 
 
 class ShortRecipeInfoSerializer(serializers.ModelSerializer):
+    """Укороченный сериализатор рецептов"""
 
     class Meta:
         model = Recipe
