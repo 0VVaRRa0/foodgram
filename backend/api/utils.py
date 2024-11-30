@@ -1,11 +1,9 @@
-import csv
 import os
+from uuid import uuid4
 
 import pandas as pd
 from dotenv import load_dotenv
 from hashids import Hashids
-
-from .models import Ingredient
 
 
 load_dotenv()
@@ -31,10 +29,7 @@ def generate_shopping_cart_file(ingredients):
     return df.to_csv(index=False)
 
 
-def load_ingredients():
-    with open('data/ingredients.csv', mode='r', encoding='utf-8') as file:
-        reader = csv.reader(file)
-        for row in reader:
-            name, measurement_unit = row[0], row[1]
-            Ingredient.objects.create(
-                name=name, measurement_unit=measurement_unit)
+def avatar_upload_path(instance, filename):
+    ext = os.path.splitext(filename)[1]
+    new_filename = f"{instance.username}_avatar_{uuid4().hex}{ext}"
+    return os.path.join('avatars/', new_filename)

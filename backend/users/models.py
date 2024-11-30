@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 
 from .validators import validate_username
-from .utils import avatar_upload_path
+from api.utils import avatar_upload_path
 
 
 class CustomUserManager(BaseUserManager):
