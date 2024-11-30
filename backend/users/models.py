@@ -43,11 +43,11 @@ class User(AbstractUser):
         verbose_name='Имя пользователя'
     )
     email = models.EmailField(
-        unique=True, blank=False, verbose_name='Email')
+        unique=True, blank=False, verbose_name='Email', max_length=254)
     first_name = models.CharField(
-        max_length=30, blank=False, verbose_name='Имя')
+        max_length=150, blank=False, verbose_name='Имя')
     last_name = models.CharField(
-        max_length=30, blank=False, verbose_name='Фамилия')
+        max_length=150, blank=False, verbose_name='Фамилия')
     avatar = models.ImageField(
         upload_to=avatar_upload_path, default=None,
         null=True, blank=True,
