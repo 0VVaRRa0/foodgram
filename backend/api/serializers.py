@@ -7,8 +7,7 @@ from djoser.serializers import UserSerializer as BaseUserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
-from cookbook.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
-                             ShoppingCart, Tag)
+from cookbook.models import Ingredient, Recipe, RecipeIngredient, Tag
 from users.models import Subscription
 
 
@@ -106,7 +105,6 @@ class GetRecipeIngredientsSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='ingredient.name', read_only=True)
     measurement_unit = serializers.CharField(
         source='ingredient.measurement_unit', read_only=True)
-    amount = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = RecipeIngredient
@@ -118,8 +116,8 @@ class GetRecipesSerializer(serializers.ModelSerializer):
 
     author = UserSerializer(read_only=True)
     tags = TagSerializer(read_only=True, many=True)
-    is_favorited = serializers.SerializerMethodField()
-    is_in_shopping_cart = serializers.SerializerMethodField()
+    is_favorited = serializers.BooleanField(read_only=True)
+    is_in_shopping_cart = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Recipe
@@ -143,28 +141,9 @@ class GetRecipesSerializer(serializers.ModelSerializer):
             ingredients, many=True).data
         return representation
 
-    def get_is_in_shopping_cart(self, obj):
-        user = self.context['request'].user
-        if not user.is_authenticated:
-            return False
-        if ShoppingCart.objects.filter(user=user, recipe=obj).exists():
-            return True
-        return False
-
-    def get_is_favorited(self, obj):
-        user = self.context['request'].user
-        if not user.is_authenticated:
-            return False
-        recipe = get_object_or_404(Recipe, id=obj.id)
-        if Favorite.objects.filter(user=user, recipe=recipe).exists():
-            return True
-        return False
-
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
     """Сериализатор модели RecipeIngredient"""
-    id = serializers.IntegerField(write_only=True)
-    amount = serializers.IntegerField(write_only=True)
 
     class Meta:
         model = RecipeIngredient
