@@ -89,4 +89,5 @@ class Subscription(models.Model):
         unique_together = ('follower', 'following')
 
     def __str__(self):
-        return f'{self.follower} подписан на {self.following}'
+        return (
+            f'{self.follower.username} подписан на {self.following.username}')

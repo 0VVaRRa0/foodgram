@@ -71,6 +71,12 @@ class RecipeIngredient(models.Model):
     class Meta:
         unique_together = ('recipe', 'ingredient')
 
+    def __str__(self):
+        return (
+            f'{self.amount} {self.ingredient.measurement_unit} '
+            f'{self.ingredient.name} в рецепте {self.recipe.name}'
+        )
+
 
 class ShortLink(models.Model):
     recipe = models.OneToOneField(
@@ -93,7 +99,9 @@ class ShortLink(models.Model):
 
     def __str__(self):
         return (
-            f'Короткая ссылка для рецепта {self.recipe}: {self.short_link}')
+            f'Короткая ссылка для рецепта {self.recipe.name}: '
+            f'{self.short_link}'
+        )
 
 
 class ShoppingCart(models.Model):
@@ -107,7 +115,7 @@ class ShoppingCart(models.Model):
         verbose_name_plural = 'Списки покупок'
 
     def __str__(self):
-        return f'Список покупок пользователя {self.user}'
+        return f'Список покупок пользователя {self.user.username}'
 
 
 class Favorite(models.Model):
@@ -130,4 +138,4 @@ class Favorite(models.Model):
         verbose_name_plural = 'Избранное'
 
     def __str__(self):
-        return f'Избранное пользователя {self.user}'
+        return f'Избранное пользователя {self.user.username}'
