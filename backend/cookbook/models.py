@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 
@@ -36,8 +36,10 @@ class Recipe(models.Model):
     name = models.CharField('Название рецепта', max_length=256)
     image = models.ImageField('Изображение', upload_to='recipe_images/')
     text = models.TextField('Описание')
-    cooking_time = models.IntegerField(
-        'Время приготовления в минутах', validators=[MinValueValidator(1)])
+    cooking_time = models.PositiveSmallIntegerField(
+        'Время приготовления в минутах',
+        validators=[MinValueValidator(1), MaxValueValidator(10080)]
+    )
     author = models.ForeignKey(
         User,
         verbose_name='Автор',
@@ -47,7 +49,9 @@ class Recipe(models.Model):
     tags = models.ManyToManyField(
         Tag, verbose_name='Теги', related_name='recipes')
     ingredients = models.ManyToManyField(
-        Ingredient, through='RecipeIngredient', verbose_name='Ингредиент')
+        Ingredient, through='RecipeIngredient',
+        verbose_name='Ингредиент', related_name='recipes'
+    )
 
     class Meta:
         ordering = ('id', 'name')
