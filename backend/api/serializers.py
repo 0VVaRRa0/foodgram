@@ -254,7 +254,7 @@ class RecipeSerializer(serializers.ModelSerializer):
                         'Убедитесь, что количество ингредиента больше 0'
                     }
                 )
-        if not self.instance and not data['image']:
+        if not data['image'] or data['image'] is None:
             raise serializers.ValidationError({'image': 'Обязательное поле'})
         data['ingredients'] = ingredients
         return data
