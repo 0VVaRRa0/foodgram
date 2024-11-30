@@ -64,6 +64,9 @@ class User(AbstractUser):
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
 
+    def __str__(self):
+        return self.username
+
 
 class Subscription(models.Model):
     follower = models.ForeignKey(
@@ -84,3 +87,6 @@ class Subscription(models.Model):
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
         unique_together = ('follower', 'following')
+
+    def __str__(self):
+        return f'{self.follower} подписан на {self.following}'
