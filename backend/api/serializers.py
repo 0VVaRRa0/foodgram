@@ -4,7 +4,6 @@ from django.contrib.auth import get_user_model
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserSerializer as BaseUserSerializer
-from dotenv import load_dotenv
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
@@ -12,7 +11,7 @@ from cookbook.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                              ShoppingCart, Tag)
 from users.models import Subscription
 
-load_dotenv()
+
 SITE_URL = os.getenv('SITE_URL')
 User = get_user_model()
 

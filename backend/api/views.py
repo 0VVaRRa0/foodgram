@@ -6,7 +6,6 @@ from django.shortcuts import get_object_or_404, redirect
 from django.views import View
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from dotenv import load_dotenv
 from rest_framework.decorators import action
 from rest_framework.exceptions import (NotAuthenticated, PermissionDenied,
                                        ValidationError)
@@ -30,8 +29,8 @@ from .serializers import (AvatarSerializer, ExtendedUserSerializer,
                           ShortRecipeInfoSerializer, TagSerializer)
 from .utils import generate_shopping_cart_file, generate_short_link
 
+
 User = get_user_model()
-load_dotenv()
 SHORT_LINK_MIN_LENGTH = os.getenv('SHORT_LINK_MIN_LENGTH', 3)
 
 
