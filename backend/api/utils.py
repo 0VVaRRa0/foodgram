@@ -1,7 +1,8 @@
+import csv
 import os
+from io import StringIO
 from uuid import uuid4
 
-import pandas as pd
 from hashids import Hashids
 
 
@@ -14,15 +15,17 @@ def generate_short_link(obj_id):
 
 
 def generate_shopping_cart_file(ingredients):
-    data = [
-        (ingredient['ingredient'],
-         ingredient['amount'],
-         ingredient['measurement_unit'])
-        for ingredient in ingredients
-    ]
-    df = pd.DataFrame(
-        data, columns=['Ингредиент', 'Количество', 'Ед. измерения'])
-    return df.to_csv(index=False)
+    output = StringIO()
+    writer = csv.writer(output, delimiter=',')
+    writer.writerow(['Ингредиент', 'Количество', 'Ед. измерения'])
+    for ingredient in ingredients:
+        writer.writerow([
+            ingredient['ingredient'],
+            ingredient['amount'],
+            ingredient['measurement_unit']
+        ])
+    output.seek(0)
+    return output.getvalue()
 
 
 def avatar_upload_path(instance, filename):
