@@ -1,5 +1,4 @@
-import os
-
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserSerializer as BaseUserSerializer
@@ -10,7 +9,6 @@ from cookbook.models import Ingredient, Recipe, RecipeIngredient, Tag
 from users.models import Subscription
 
 
-SITE_URL = os.getenv('SITE_URL')
 User = get_user_model()
 
 
@@ -250,7 +248,7 @@ class ShortLinkSerializer(serializers.ModelSerializer):
         fields = ('short_link',)
 
     def get_short_link(self, obj):
-        return f'{SITE_URL}/s/{obj.short_link}/'
+        return f'{settings.SITE_URL}/s/{obj.short_link}/'
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
