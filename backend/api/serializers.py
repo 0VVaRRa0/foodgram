@@ -32,14 +32,12 @@ class UserSerializer(BaseUserSerializer):
 
     def get_is_subscribed(self, obj):
         follower = self.context['request'].user
-        if not follower.id:
+        if not follower.is_authenticated:
             return False
         following = get_object_or_404(User, id=obj.id)
-        if Subscription.objects.filter(
+        return Subscription.objects.filter(
             follower=follower, following=following
-        ).exists():
-            return True
-        return False
+        ).exists()
 
 
 class ExtendedUserSerializer(UserSerializer):
