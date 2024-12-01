@@ -68,6 +68,8 @@ class CustomUserVIewSet(UserViewSet):
     def subscriptions(self, request, id):
         follower = request.user
         following = get_object_or_404(User, id=id)
+        # По спецификации же нужно возвращать 404 для несуществующего рецепта
+        # и при POST, и при DELETE запросе
 
         if follower == following:
             return Response(status=HTTP_400_BAD_REQUEST)
@@ -94,6 +96,7 @@ class CustomUserVIewSet(UserViewSet):
                 follower=follower, following=following).delete()
             if not deleted:
                 return Response(status=HTTP_400_BAD_REQUEST)
+                # А в случае неуспешного удаления нужно возвращать 400
             return Response(status=HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['get'], url_path='subscriptions')
