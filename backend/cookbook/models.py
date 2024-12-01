@@ -95,13 +95,11 @@ class BaseUserRecipeRelation(models.Model):
         User,
         on_delete=models.CASCADE,
         verbose_name='Пользователь',
-        related_name='users'
     )
     recipe = models.ForeignKey(
         'Recipe',
         on_delete=models.CASCADE,
         verbose_name='Рецепт',
-        related_name='recipes'
     )
 
     class Meta:
@@ -117,9 +115,11 @@ class ShoppingCart(BaseUserRecipeRelation):
     class Meta:
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Списки покупок'
+        default_related_name = 'shopping_carts'
 
 
 class Favorite(BaseUserRecipeRelation):
     class Meta:
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
+        default_related_name = 'favorites'
