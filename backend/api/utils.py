@@ -1,6 +1,7 @@
 import csv
 import os
 from io import StringIO
+from pathlib import Path
 from uuid import uuid4
 
 from hashids import Hashids
@@ -29,6 +30,6 @@ def generate_shopping_cart_file(ingredients):
 
 
 def avatar_upload_path(instance, filename):
-    ext = os.path.splitext(filename)[1]
-    new_filename = f"{instance.username}_avatar_{uuid4().hex}{ext}"
-    return os.path.join('avatars/', new_filename)
+    file_extension = Path(filename).suffix
+    new_filename = f'{instance.username}_avatar_{uuid4().hex}{file_extension}'
+    return str(Path('avatars') / new_filename)
