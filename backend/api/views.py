@@ -34,14 +34,13 @@ class CustomUserVIewSet(UserViewSet):
     """Модифицированный ViewSet пользователей."""
 
     pagination_class = CustomPagination
+    permission_classes = [IsAuthenticated]
 
     def get_permissions(self):
         if self.action == 'retrieve':
             return [AllowAny()]
-        if self.action == 'create_destroy_avatar':
-            return [IsAuthenticated()]
-        if self.action == 'subscriptions':
-            return [IsAuthenticated()]
+        if self.action == 'list':
+            return [AllowAny()]
         return super().get_permissions()
 
     @action(detail=False, methods=['put', 'delete'],
@@ -140,24 +139,21 @@ class RecipeViewSet(ModelViewSet):
     """ViewSet рецептов."""
 
     pagination_class = CustomPagination
+    permission_classes = [IsAuthenticated]
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
 
     def get_permissions(self):
-        if self.action == 'create':
-            return [IsAuthenticated()]
-        if self.action == 'perform_create':
-            return [IsAuthenticated()]
+        if self.action == 'retrieve':
+            return [AllowAny()]
+        if self.action == 'list':
+            return [AllowAny()]
+        if self.action == 'get_short_link':
+            return [AllowAny()]
         if self.action in ['update', 'partial_update']:
             return [IsAuthenticatedAuthor()]
         if self.action == 'destroy':
             return [IsAuthenticatedAuthor()]
-        if self.action == 'shopping_cart':
-            return [IsAuthenticated()]
-        if self.action == 'favorite':
-            return [IsAuthenticated()]
-        if self.action == 'download_shopping_cart':
-            return [IsAuthenticated()]
         return super().get_permissions()
 
     def get_queryset(self):
