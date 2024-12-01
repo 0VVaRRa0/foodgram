@@ -61,6 +61,12 @@ class ExtendedUserSerializer(UserSerializer):
         return ShortRecipeInfoSerializer(recipes, many=True).data
 
 
+class SubscriptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subscription
+        fields = ('follower', 'following')
+
+
 class AvatarSerializer(serializers.ModelSerializer):
     """Сериализатор поля 'avatar' пользователей"""
     avatar = Base64ImageField()

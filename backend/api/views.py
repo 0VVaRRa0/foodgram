@@ -27,7 +27,8 @@ from .permissions import IsOwnerOrAdminOrReadOnly
 from .serializers import (AvatarSerializer, ExtendedUserSerializer,
                           GetRecipesSerializer, IngredientSerializer,
                           RecipeSerializer, ShortLinkSerializer,
-                          ShortRecipeInfoSerializer, TagSerializer)
+                          ShortRecipeInfoSerializer, SubscriptionSerializer,
+                          TagSerializer)
 from .utils import generate_shopping_cart_file, generate_short_link
 
 
@@ -50,7 +51,7 @@ class CustomUserVIewSet(UserViewSet):
         url_path='me/avatar', permission_classes=[IsAuthenticated]
     )
     def create_destroy_avatar(self, request):
-        user = get_object_or_404(User, id=request.user.id)
+        user = request.user
 
         if request.method == 'PUT':
             serializer = AvatarSerializer(
@@ -63,12 +64,12 @@ class CustomUserVIewSet(UserViewSet):
             return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
         if request.method == 'DELETE':
-            user.avatar = None
-            user.save()
+            if user.avatar:
+                user.avatar.delete()
             return Response(status=HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=['post', 'delete'], url_path='subscribe')
-    def subscribtions(self, request, id):
+    def subscriptions(self, request, id):
         follower = request.user
         if not follower.is_authenticated:
             raise NotAuthenticated()
@@ -78,26 +79,27 @@ class CustomUserVIewSet(UserViewSet):
             return Response(status=HTTP_400_BAD_REQUEST)
 
         if request.method == 'POST':
-            subscription, created = Subscription.objects.get_or_create(
-                follower=follower, following=following)
-            if not created:
-                return Response(status=HTTP_400_BAD_REQUEST)
-            recipes_limit = request.query_params.get('recipes_limit')
-            following = User.objects.annotate(
-                recipes_count=Count('recipes')).get(id=id)
-            serializer = ExtendedUserSerializer(
-                following,
-                context={'request': request, 'recipes_limit': recipes_limit}
-            )
-            return Response(serializer.data, status=HTTP_201_CREATED)
+            data = {'follower': request.user.id, 'following': id}
+            serializer = SubscriptionSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                recipes_limit = request.query_params.get('recipes_limit', 10)
+                following = User.objects.annotate(
+                    recipes_count=Count('recipes')).get(id=id)
+                user_serializer = ExtendedUserSerializer(
+                    following,
+                    context={
+                        'request': request, 'recipes_limit': recipes_limit
+                    }
+                )
+                return Response(user_serializer.data, status=HTTP_201_CREATED)
+            return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
         elif request.method == 'DELETE':
-            try:
-                subscription = get_object_or_404(
-                    Subscription, follower=follower, following=following)
-            except Http404:
-                raise ValidationError('Вы не подписаны на пользователя')
-            subscription.delete()
+            deleted, _ = Subscription.objects.filter(
+                follower=follower, following=following).delete()
+            if not deleted:
+                return Response(status=HTTP_400_BAD_REQUEST)
             return Response(status=HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['get'], url_path='subscriptions')
