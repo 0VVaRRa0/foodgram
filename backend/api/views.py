@@ -163,9 +163,15 @@ class RecipeViewSet(ModelViewSet):
         return RecipeSerializer
 
     def perform_create(self, serializer):
-        if not self.request.user.is_authenticated:
+        user = self.request.user
+        if not user.is_authenticated:
             raise NotAuthenticated()
-        return serializer.save(author=self.request.user)
+        recipe = serializer.save(author=user)
+        recipe.is_favorited = Favorite.objects.filter(
+            user=user, recipe=recipe).exists()
+        recipe.is_in_shopping_cart = ShoppingCart.objects.filter(
+            user=user, recipe=recipe).exists()
+        return recipe
 
     def perform_update(self, serializer):
         if not self.request.user.is_authenticated:
