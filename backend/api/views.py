@@ -79,7 +79,7 @@ class CustomUserVIewSet(UserViewSet):
             serializer = SubscriptionSerializer(data=data)
             if serializer.is_valid():
                 serializer.save()
-                recipes_limit = request.query_params.get('recipes_limit', 10)
+                recipes_limit = request.query_params.get('recipes_limit')
                 user_serializer = ExtendedUserSerializer(
                     following,
                     context={

@@ -50,11 +50,12 @@ class ExtendedUserSerializer(UserSerializer):
         fields = UserSerializer.Meta.fields + ('recipes', 'recipes_count')
 
     def get_recipes(self, obj):
-        recipes_limit = self.context.get('recipes_limit', 10)
-        try:
+        recipes_limit = self.context.get(
+            'recipes_limit', settings.DEFAULT_RECIPES_LIMIT)
+        if str(recipes_limit).isdigit():
             recipes_limit = int(recipes_limit)
-        except (ValueError, TypeError):
-            recipes_limit = 10
+        else:
+            recipes_limit = settings.DEFAULT_RECIPES_LIMIT
         recipes = obj.recipes.all()[:recipes_limit]
         return ShortRecipeInfoSerializer(recipes, many=True).data
 
