@@ -46,13 +46,10 @@ class UserSerializer(BaseUserSerializer):
 class ExtendedUserSerializer(UserSerializer):
     """Расширенный сериализатор модели пользователей"""
     recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.SerializerMethodField()
+    recipes_count = serializers.IntegerField(read_only=True)
 
     class Meta(UserSerializer.Meta):
         fields = UserSerializer.Meta.fields + ('recipes', 'recipes_count')
-
-    def get_recipes_count(self, obj):
-        return obj.recipes.count()
 
     def get_recipes(self, obj):
         recipes_limit = self.context.get('recipes_limit')

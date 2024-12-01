@@ -1,7 +1,7 @@
 import os
 
 from django.contrib.auth import get_user_model
-from django.db.models import BooleanField, Exists, OuterRef, Value
+from django.db.models import BooleanField, Exists, OuterRef, Value, Count
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views import View
@@ -83,6 +83,8 @@ class CustomUserVIewSet(UserViewSet):
             if not created:
                 return Response(status=HTTP_400_BAD_REQUEST)
             recipes_limit = request.query_params.get('recipes_limit')
+            following = User.objects.annotate(
+                recipes_count=Count('recipes')).get(id=id)
             serializer = ExtendedUserSerializer(
                 following,
                 context={'request': request, 'recipes_limit': recipes_limit}
@@ -102,11 +104,14 @@ class CustomUserVIewSet(UserViewSet):
     def get_subscriptions(self, request):
         subscriptions = request.user.followers.all()
         followings = [subscription.following for subscription in subscriptions]
+        followings_queryset = User.objects.filter(
+            id__in=[following.id for following in followings]).annotate(
+                recipes_count=Count('recipes'))
         paginator = PageNumberPagination()
         paginator.page_size_query_param = 'limit'
         paginator.page_query_param = 'page'
         paginated_followings = paginator.paginate_queryset(
-            followings, request, view=self)
+            followings_queryset, request, view=self)
         recipes_limit = request.query_params.get('recipes_limit')
         serializer = ExtendedUserSerializer(
             paginated_followings,
