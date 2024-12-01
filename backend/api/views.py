@@ -143,7 +143,8 @@ class RecipeViewSet(ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = Recipe.objects.all()
+        queryset = Recipe.objects.select_related('author').prefetch_related(
+            'tags', 'recipeingredient__ingredient')
         if user.is_authenticated:
             queryset = queryset.annotate(
                 is_favorited=Exists(Favorite.objects.filter(
@@ -201,13 +202,22 @@ class RecipeViewSet(ModelViewSet):
 
     @action(detail=True, methods=['post', 'delete'], url_path='shopping_cart')
     def shopping_cart(self, request, pk):
+        return self.shopping_cart_and_favorite(request, pk, ShoppingCart)
+
+    @action(detail=True, methods=['post', 'delete'], url_path='favorite')
+    def favorite(self, request, pk):
+        return self.shopping_cart_and_favorite(request, pk, Favorite)
+
+    def shopping_cart_and_favorite(self, request, pk, model):
         user = request.user
         if not user.is_authenticated:
             raise NotAuthenticated()
         recipe = get_object_or_404(Recipe, id=pk)
+        # По спецификации же нужно возвращать 404 для несуществующего рецепта
+        # и при POST, и при DELETE запросе
 
         if request.method == 'POST':
-            cart, created = ShoppingCart.objects.get_or_create(
+            _, created = model.objects.get_or_create(
                 user=user, recipe=recipe)
             if not created:
                 return Response(status=HTTP_400_BAD_REQUEST)
@@ -216,11 +226,11 @@ class RecipeViewSet(ModelViewSet):
             return Response(serializer.data, status=HTTP_201_CREATED)
 
         elif request.method == 'DELETE':
-            if not ShoppingCart.objects.filter(
-                user=user, recipe=recipe
-            ).exists():
+            deleted, _ = model.objects.filter(
+                user=user, recipe=recipe).delete()
+            if not deleted:
                 return Response(status=HTTP_400_BAD_REQUEST)
-            ShoppingCart.objects.filter(user=user, recipe=recipe).delete()
+            # А в случае неуспешного удаления нужно возвращать 400
             return Response(status=HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['get'], url_path='download_shopping_cart')
@@ -249,29 +259,6 @@ class RecipeViewSet(ModelViewSet):
         response['Content-Disposition'] = (
             'attachment; filename="shopping_cart.csv"')
         return response
-
-    @action(detail=True, methods=['post', 'delete'], url_path='favorite')
-    def favorite(self, request, pk):
-        user = request.user
-        if not user.is_authenticated:
-            raise NotAuthenticated()
-        recipe = get_object_or_404(Recipe, id=pk)
-
-        if request.method == 'POST':
-            if Favorite.objects.filter(user=user, recipe=recipe).exists():
-                return Response(status=HTTP_400_BAD_REQUEST)
-            Favorite.objects.create(user=user, recipe=recipe)
-            serializer = ShortRecipeInfoSerializer(recipe)
-            return Response(serializer.data, status=HTTP_201_CREATED)
-
-        if request.method == 'DELETE':
-            try:
-                favorite = get_object_or_404(
-                    Favorite, user=user, recipe=recipe)
-            except Http404:
-                raise ValidationError('Рецепт ещё не добавлен в избранное')
-            favorite.delete()
-            return Response(status=HTTP_204_NO_CONTENT)
 
 
 class ShortLinkRedirectView(View):
