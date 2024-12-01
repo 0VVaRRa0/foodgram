@@ -1,8 +1,9 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 
+from api.utils import avatar_upload_path
+
 from .validators import validate_username
-from .utils import avatar_upload_path
 
 
 class CustomUserManager(BaseUserManager):
@@ -36,16 +37,23 @@ class CustomUserManager(BaseUserManager):
         return user
 
 
-class CustomUser(AbstractUser):
+class User(AbstractUser):
     username = models.CharField(
         max_length=150, unique=True,
-        blank=False, validators=[validate_username]
+        validators=[validate_username],
+        verbose_name='Имя пользователя'
     )
-    email = models.EmailField(unique=True, blank=False)
-    first_name = models.CharField(max_length=30, blank=False)
-    last_name = models.CharField(max_length=30, blank=False)
+    email = models.EmailField(
+        unique=True, blank=False, verbose_name='Email', max_length=254)
+    first_name = models.CharField(
+        max_length=150, blank=False, verbose_name='Имя')
+    last_name = models.CharField(
+        max_length=150, blank=False, verbose_name='Фамилия')
     avatar = models.ImageField(
-        upload_to=avatar_upload_path, default=None, null=True, blank=True)
+        upload_to=avatar_upload_path, default=None,
+        null=True, blank=True,
+        verbose_name='Аватар'
+    )
 
     objects = CustomUserManager()
 
@@ -57,16 +65,19 @@ class CustomUser(AbstractUser):
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
 
+    def __str__(self):
+        return self.username
+
 
 class Subscription(models.Model):
     follower = models.ForeignKey(
-        CustomUser,
+        User,
         verbose_name='Подписчик',
         on_delete=models.CASCADE,
         related_name='followers'
     )
     following = models.ForeignKey(
-        CustomUser,
+        User,
         verbose_name='Автор',
         on_delete=models.CASCADE,
         related_name='following'
@@ -77,3 +88,7 @@ class Subscription(models.Model):
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
         unique_together = ('follower', 'following')
+
+    def __str__(self):
+        return (
+            f'{self.follower.username} подписан на {self.following.username}')

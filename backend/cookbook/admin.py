@@ -1,18 +1,21 @@
 from django.contrib import admin
 from django.db.models import Count
 
-from .models import Ingredient, Tag, Recipe
+from .models import Ingredient, Recipe, Tag
 
 
+@admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ('name', 'measurement_unit')
     search_fields = ('name',)
 
 
+@admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     list_display = ('name', 'slug')
 
 
+@admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     list_display = ('name', 'author')
     search_fields = ('name', 'author')
@@ -28,8 +31,3 @@ class RecipeAdmin(admin.ModelAdmin):
         return obj.favorites_count
     favorites_count.admin_order_field = 'favorites_count'
     favorites_count.short_description = 'Добавлений в избранное'
-
-
-admin.site.register(Ingredient, IngredientAdmin)
-admin.site.register(Tag, TagAdmin)
-admin.site.register(Recipe, RecipeAdmin)

@@ -1,9 +1,10 @@
 from django_filters import rest_framework as filters
 
-from cookbook.models import Recipe, Ingredient
+from cookbook.models import Ingredient, Recipe
 
 
 class RecipeFilter(filters.FilterSet):
+    """Фильтр по полям рецептов"""
     is_favorited = filters.BooleanFilter(method='filter_is_favorited')
     is_in_shopping_cart = filters.BooleanFilter(
         method='filter_is_in_shopping_cart')
@@ -37,6 +38,7 @@ class RecipeFilter(filters.FilterSet):
 
 
 class IngredientFilter(filters.FilterSet):
+    """Фильтр по полям ингредиентов"""
     name = filters.CharFilter(lookup_expr='istartswith')
 
     class Meta:

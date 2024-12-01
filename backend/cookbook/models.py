@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 
@@ -36,8 +36,10 @@ class Recipe(models.Model):
     name = models.CharField('Название рецепта', max_length=256)
     image = models.ImageField('Изображение', upload_to='recipe_images/')
     text = models.TextField('Описание')
-    cooking_time = models.IntegerField(
-        'Время приготовления в минутах', validators=[MinValueValidator(1)])
+    cooking_time = models.PositiveSmallIntegerField(
+        'Время приготовления в минутах',
+        validators=[MinValueValidator(1), MaxValueValidator(10080)]
+    )
     author = models.ForeignKey(
         User,
         verbose_name='Автор',
@@ -47,7 +49,11 @@ class Recipe(models.Model):
     tags = models.ManyToManyField(
         Tag, verbose_name='Теги', related_name='recipes')
     ingredients = models.ManyToManyField(
-        Ingredient, through='RecipeIngredient', verbose_name='Ингредиент')
+        Ingredient, through='RecipeIngredient',
+        verbose_name='Ингредиент', related_name='recipes'
+    )
+    short_link = models.CharField(
+        'Короткая ссылка', max_length=6, null=True, default=None)
 
     class Meta:
         ordering = ('id', 'name')
@@ -59,64 +65,57 @@ class Recipe(models.Model):
 
 
 class RecipeIngredient(models.Model):
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
-    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(
+        Recipe, verbose_name='Рецепт',
+        on_delete=models.CASCADE, related_name='recipeingredient'
+    )
+    ingredient = models.ForeignKey(
+        Ingredient, verbose_name='Игредиент',
+        on_delete=models.CASCADE, related_name='recipeingredient'
+    )
     amount = models.IntegerField(
         'Количество', validators=[MinValueValidator(1)])
 
     class Meta:
+        verbose_name = 'Ингредиент рецепта'
+        verbose_name_plural = 'Ингредиенты рецептов'
         unique_together = ('recipe', 'ingredient')
-
-
-class ShortLink(models.Model):
-    recipe = models.OneToOneField(
-        Recipe,
-        on_delete=models.CASCADE,
-        related_name="short_link",
-        verbose_name="Рецепт"
-    )
-    short_link = models.CharField(
-        max_length=10,
-        unique=True,
-        verbose_name="Короткая ссылка"
-    )
-
-    class Meta:
-        ordering = ('id',)
-        verbose_name = 'Короткая ссылка на рецепт'
-        verbose_name_plural = 'Короткие ссылки на рецепты'
-        unique_together = ('recipe', 'short_link')
 
     def __str__(self):
         return (
-            f'Короткая ссылка для рецепта {self.recipe}: {self.short_link}')
+            f'{self.amount} {self.ingredient.measurement_unit} '
+            f'{self.ingredient.name} в рецепте {self.recipe.name}'
+        )
 
 
-class ShoppingCart(models.Model):
-    user = models.OneToOneField(
-        User, verbose_name='Пользователь', on_delete=models.CASCADE)
-    recipe = models.ManyToManyField(Recipe, verbose_name='Рецепты')
-
-    class Meta:
-        ordering = ('id',)
-        verbose_name = 'Список покупок'
-        verbose_name_plural = 'Списки покупок'
-
-
-class Favorite(models.Model):
+class BaseUserRecipeRelation(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        verbose_name='Пользователь',
-        related_name='favorites'
+        verbose_name='Пользователь'
     )
     recipe = models.ForeignKey(
-        Recipe,
+        'Recipe',
         on_delete=models.CASCADE,
         verbose_name='Рецепт'
     )
 
     class Meta:
+        abstract = True
         ordering = ('id',)
+        unique_together = ('user', 'recipe')
+
+    def __str__(self):
+        return f'{self._meta.verbose_name} пользователя {self.user.username}'
+
+
+class ShoppingCart(BaseUserRecipeRelation):
+    class Meta:
+        verbose_name = 'Список покупок'
+        verbose_name_plural = 'Списки покупок'
+
+
+class Favorite(BaseUserRecipeRelation):
+    class Meta:
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
