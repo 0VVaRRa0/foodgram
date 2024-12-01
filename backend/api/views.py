@@ -8,7 +8,6 @@ from django.views import View
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework.decorators import action
-from rest_framework.exceptions import NotAuthenticated, PermissionDenied
 from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import (HTTP_200_OK, HTTP_201_CREATED,
@@ -21,6 +20,7 @@ from users.models import Subscription
 
 from .filters import IngredientFilter, RecipeFilter
 from .paginators import CustomPagination
+from .permissions import IsAuthenticatedAuthor
 from .serializers import (AvatarSerializer, ExtendedUserSerializer,
                           GetRecipesSerializer, IngredientSerializer,
                           RecipeSerializer, ShortLinkSerializer,
@@ -136,10 +136,26 @@ class IngredientViewSet(ReadOnlyModelViewSet):
 
 class RecipeViewSet(ModelViewSet):
     """ViewSet рецептов"""
-    permission_classes = (AllowAny,)
     pagination_class = CustomPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
+
+    def get_permissions(self):
+        if self.action == 'create':
+            return [IsAuthenticated()]
+        if self.action == 'perform_create':
+            return [IsAuthenticated()]
+        if self.action in ['update', 'partial_update']:
+            return [IsAuthenticatedAuthor()]
+        if self.action == 'destroy':
+            return [IsAuthenticatedAuthor()]
+        if self.action == 'shopping_cart':
+            return [IsAuthenticated()]
+        if self.action == 'favorite':
+            return [IsAuthenticated()]
+        if self.action == 'download_shopping_cart':
+            return [IsAuthenticated()]
+        return super().get_permissions()
 
     def get_queryset(self):
         user = self.request.user
@@ -165,31 +181,12 @@ class RecipeViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         user = self.request.user
-        if not user.is_authenticated:
-            raise NotAuthenticated()
         recipe = serializer.save(author=user)
         recipe.is_favorited = Favorite.objects.filter(
             user=user, recipe=recipe).exists()
         recipe.is_in_shopping_cart = ShoppingCart.objects.filter(
             user=user, recipe=recipe).exists()
         return recipe
-
-    def perform_update(self, serializer):
-        if not self.request.user.is_authenticated:
-            raise NotAuthenticated()
-        recipe_instance = serializer.instance
-        if recipe_instance.author != self.request.user:
-            raise PermissionDenied()
-        super().perform_update(serializer)
-
-    def destroy(self, request, *args, **kwargs):
-        recipe = self.get_object()
-        if not self.request.user.is_authenticated:
-            raise NotAuthenticated()
-        if self.request.user != recipe.author:
-            raise PermissionDenied()
-        recipe.delete()
-        return Response(status=HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=['get'], url_path='get-link')
     def get_short_link(self, request, pk):
@@ -210,8 +207,6 @@ class RecipeViewSet(ModelViewSet):
 
     def shopping_cart_and_favorite(self, request, pk, model):
         user = request.user
-        if not user.is_authenticated:
-            raise NotAuthenticated()
         recipe = get_object_or_404(Recipe, id=pk)
         # По спецификации же нужно возвращать 404 для несуществующего рецепта
         # и при POST, и при DELETE запросе
