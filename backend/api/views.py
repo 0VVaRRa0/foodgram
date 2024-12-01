@@ -1,5 +1,3 @@
-import os
-
 from django.contrib.auth import get_user_model
 from django.db.models import BooleanField, Exists, OuterRef, Value, Count
 from django.http import HttpResponse
@@ -30,7 +28,6 @@ from .utils import generate_shopping_cart_file, generate_short_link
 
 
 User = get_user_model()
-SHORT_LINK_MIN_LENGTH = os.getenv('SHORT_LINK_MIN_LENGTH', 3)
 
 
 class CustomUserVIewSet(UserViewSet):
