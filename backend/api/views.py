@@ -39,7 +39,7 @@ class CustomUserVIewSet(UserViewSet):
 
     def get_permissions(self):
         if self.action == 'retrieve':
-            return [AllowAny(),]
+            return [AllowAny()]
         if self.action == 'create_destroy_avatar':
             return [IsAuthenticated()]
         if self.action == 'subscriptions':
