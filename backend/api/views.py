@@ -9,7 +9,6 @@ from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotAuthenticated, PermissionDenied
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import (HTTP_200_OK, HTTP_201_CREATED,
@@ -38,6 +37,7 @@ SHORT_LINK_MIN_LENGTH = os.getenv('SHORT_LINK_MIN_LENGTH', 3)
 class CustomUserVIewSet(UserViewSet):
     """Модифицированный ViewSet пользователей"""
     permission_classes = [IsOwnerOrAdminOrReadOnly]
+    pagination_class = CustomPagination
 
     @action(['get'], detail=False)
     def me(self, request, *args, **kwargs):
@@ -103,23 +103,20 @@ class CustomUserVIewSet(UserViewSet):
 
     @action(detail=False, methods=['get'], url_path='subscriptions')
     def get_subscriptions(self, request):
-        subscriptions = request.user.followers.all()
-        followings = [subscription.following for subscription in subscriptions]
+        subscriptions = request.user.followers.values_list(
+            'following_id', flat=True)
         followings_queryset = User.objects.filter(
-            id__in=[following.id for following in followings]).annotate(
-                recipes_count=Count('recipes'))
-        paginator = PageNumberPagination()
-        paginator.page_size_query_param = 'limit'
-        paginator.page_query_param = 'page'
-        paginated_followings = paginator.paginate_queryset(
-            followings_queryset, request, view=self)
+            id__in=subscriptions
+        ).annotate(recipes_count=Count('recipes'))
+        paginated_followings = self.paginate_queryset(
+            followings_queryset)
         recipes_limit = request.query_params.get('recipes_limit')
         serializer = ExtendedUserSerializer(
             paginated_followings,
             many=True,
             context={'request': request, 'recipes_limit': recipes_limit},
         )
-        return paginator.get_paginated_response(serializer.data)
+        return self.get_paginated_response(serializer.data)
 
 
 class TagViewSet(ReadOnlyModelViewSet):
