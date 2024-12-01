@@ -34,7 +34,8 @@ SHORT_LINK_MIN_LENGTH = os.getenv('SHORT_LINK_MIN_LENGTH', 3)
 
 
 class CustomUserVIewSet(UserViewSet):
-    """Модифицированный ViewSet пользователей"""
+    """Модифицированный ViewSet пользователей."""
+
     pagination_class = CustomPagination
 
     def get_permissions(self):
@@ -117,7 +118,8 @@ class CustomUserVIewSet(UserViewSet):
 
 
 class TagViewSet(ReadOnlyModelViewSet):
-    """ViewSet тегов"""
+    """ViewSet тегов."""
+
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = (AllowAny,)
@@ -125,7 +127,8 @@ class TagViewSet(ReadOnlyModelViewSet):
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
-    """ViewSet ингредиентов"""
+    """ViewSet ингредиентов."""
+
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = (AllowAny,)
@@ -135,7 +138,8 @@ class IngredientViewSet(ReadOnlyModelViewSet):
 
 
 class RecipeViewSet(ModelViewSet):
-    """ViewSet рецептов"""
+    """ViewSet рецептов."""
+
     pagination_class = CustomPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
@@ -257,7 +261,8 @@ class RecipeViewSet(ModelViewSet):
 
 
 class ShortLinkRedirectView(View):
-    """Представление обработки коротких ссылок рецептов"""
+    """Представление обработки коротких ссылок рецептов."""
+
     def get(self, request, short_link):
         recipe = get_object_or_404(Recipe, short_link=short_link)
         return redirect('recipe-detail', pk=recipe.id)
