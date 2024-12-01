@@ -1,7 +1,7 @@
 import os
 
 from django.contrib.auth import get_user_model
-from django.db.models import Exists, OuterRef
+from django.db.models import BooleanField, Exists, OuterRef, Value
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views import View
@@ -152,8 +152,8 @@ class RecipeViewSet(ModelViewSet):
                     user=user, recipe=OuterRef('pk'))))
         else:
             queryset = queryset.annotate(
-                is_favorited=False,
-                is_in_shopping_cart=False
+                is_favorited=Value(False, output_field=BooleanField()),
+                is_in_shopping_cart=Value(False, output_field=BooleanField())
             )
         return queryset
 

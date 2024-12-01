@@ -1,8 +1,6 @@
 import os
 
 from django.contrib.auth import get_user_model
-from django.http import Http404
-from django.shortcuts import get_object_or_404
 from djoser.serializers import UserSerializer as BaseUserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
@@ -212,12 +210,12 @@ class RecipeSerializer(serializers.ModelSerializer):
                 {'tags': 'Теги не могут повторяться'})
         ingredient_list = []
         for ingredient_item in ingredients:
-            try:
-                ingredient = get_object_or_404(
-                    Ingredient, id=ingredient_item['id'])
-            except Http404:
+            ingredient = Ingredient.objects.filter(
+                id=ingredient_item['id']).first()
+            if ingredient is None:
                 raise serializers.ValidationError(
-                    {'ingredients': 'Ингредиента с таким id не существует'})
+                    {'ingredients': 'Ингредиента с таким id не существует'}
+                )
             if ingredient in ingredient_list:
                 raise serializers.ValidationError(
                     {'ingredients': 'Ингредиенты должны быть уникальными'})
