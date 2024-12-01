@@ -1,6 +1,7 @@
 import os
 
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from djoser.serializers import UserSerializer as BaseUserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
@@ -34,7 +35,7 @@ class UserSerializer(BaseUserSerializer):
         follower = self.context['request'].user
         if not follower.id:
             return False
-        following = User.objects.get(id=obj.id)
+        following = get_object_or_404(User, id=obj.id)
         if Subscription.objects.filter(
             follower=follower, following=following
         ).exists():
