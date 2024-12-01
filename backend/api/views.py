@@ -21,7 +21,6 @@ from users.models import Subscription
 
 from .filters import IngredientFilter, RecipeFilter
 from .paginators import CustomPagination
-from .permissions import IsOwnerOrAdminOrReadOnly
 from .serializers import (AvatarSerializer, ExtendedUserSerializer,
                           GetRecipesSerializer, IngredientSerializer,
                           RecipeSerializer, ShortLinkSerializer,
@@ -36,19 +35,19 @@ SHORT_LINK_MIN_LENGTH = os.getenv('SHORT_LINK_MIN_LENGTH', 3)
 
 class CustomUserVIewSet(UserViewSet):
     """Модифицированный ViewSet пользователей"""
-    permission_classes = [IsOwnerOrAdminOrReadOnly]
     pagination_class = CustomPagination
 
-    @action(['get'], detail=False)
-    def me(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            raise NotAuthenticated()
-        return super().me(request, *args, **kwargs)
+    def get_permissions(self):
+        if self.action == 'retrieve':
+            return [AllowAny(),]
+        if self.action == 'create_destroy_avatar':
+            return [IsAuthenticated()]
+        if self.action == 'subscriptions':
+            return [IsAuthenticated()]
+        return super().get_permissions()
 
-    @action(
-        detail=False, methods=['put', 'delete'],
-        url_path='me/avatar', permission_classes=[IsAuthenticated]
-    )
+    @action(detail=False, methods=['put', 'delete'],
+            url_path='me/avatar')
     def create_destroy_avatar(self, request):
         user = request.user
 
@@ -70,8 +69,6 @@ class CustomUserVIewSet(UserViewSet):
     @action(detail=True, methods=['post', 'delete'], url_path='subscribe')
     def subscriptions(self, request, id):
         follower = request.user
-        if not follower.is_authenticated:
-            raise NotAuthenticated()
         following = get_object_or_404(User, id=id)
 
         if follower == following:
