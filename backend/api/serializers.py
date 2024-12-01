@@ -77,7 +77,7 @@ class AvatarSerializer(serializers.ModelSerializer):
         avatar = data.get('avatar')
         if not avatar:
             raise serializers.ValidationError(
-                {"avatar": "Поле 'avatar' не может быть пустым."})
+                {'avatar': 'Поле "avatar" не может быть пустым.'})
         return data
 
 
