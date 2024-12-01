@@ -67,7 +67,8 @@ class CustomUserVIewSet(UserViewSet):
     @action(detail=True, methods=['post', 'delete'], url_path='subscribe')
     def subscriptions(self, request, id):
         follower = request.user
-        following = get_object_or_404(User, id=id)
+        following = get_object_or_404(
+            User.objects.annotate(recipes_count=Count('recipes')), id=id)
         # По спецификации же нужно возвращать 404 для несуществующего рецепта
         # и при POST, и при DELETE запросе
 
@@ -80,8 +81,6 @@ class CustomUserVIewSet(UserViewSet):
             if serializer.is_valid():
                 serializer.save()
                 recipes_limit = request.query_params.get('recipes_limit', 10)
-                following = User.objects.annotate(
-                    recipes_count=Count('recipes')).get(id=id)
                 user_serializer = ExtendedUserSerializer(
                     following,
                     context={
