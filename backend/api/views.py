@@ -181,10 +181,12 @@ class RecipeViewSet(ModelViewSet):
     def perform_create(self, serializer):
         user = self.request.user
         recipe = serializer.save(author=user)
-        recipe.is_favorited = Favorite.objects.filter(
-            user=user, recipe=recipe).exists()
-        recipe.is_in_shopping_cart = ShoppingCart.objects.filter(
-            user=user, recipe=recipe).exists()
+        recipe.is_favorited = False
+        recipe.is_in_shopping_cart = False
+        # Так как значение полей вычисляется в get_queryset
+        # и при создании get_queryset не вызывается,
+        # а по спецификации эти поля должны быть, я
+        # назначаю их вручную
         return recipe
 
     @action(detail=True, methods=['get'], url_path='get-link')
