@@ -236,21 +236,7 @@ class RecipeViewSet(ModelViewSet):
         recipes_ingredients = RecipeIngredient.objects.filter(
             recipe__in=shopping_cart.values('recipe')
         ).select_related('ingredient', 'recipe')
-        ingredient_dict = {}
-        for recipe_ingredient in recipes_ingredients:
-            ingredient_name = recipe_ingredient.ingredient.name
-            amount = recipe_ingredient.amount
-            measurement_unit = recipe_ingredient.ingredient.measurement_unit
-            if ingredient_name in ingredient_dict:
-                ingredient_dict[ingredient_name]['amount'] += amount
-            else:
-                ingredient_dict[ingredient_name] = {
-                    'ingredient': ingredient_name,
-                    'amount': amount,
-                    'measurement_unit': measurement_unit
-                }
-        ingredients = list(ingredient_dict.values())
-        csv_file = generate_shopping_cart_file(ingredients)
+        csv_file = generate_shopping_cart_file(recipes_ingredients)
         response = HttpResponse(csv_file, content_type='text/csv')
         response['Content-Disposition'] = (
             'attachment; filename="shopping_cart.csv"')
