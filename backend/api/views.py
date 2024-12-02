@@ -1,5 +1,3 @@
-import os
-
 from django.contrib.auth import get_user_model
 from django.db.models import BooleanField, Exists, OuterRef, Value, Count
 from django.http import HttpResponse
@@ -30,20 +28,19 @@ from .utils import generate_shopping_cart_file, generate_short_link
 
 
 User = get_user_model()
-SHORT_LINK_MIN_LENGTH = os.getenv('SHORT_LINK_MIN_LENGTH', 3)
 
 
 class CustomUserVIewSet(UserViewSet):
-    """Модифицированный ViewSet пользователей"""
+    """Модифицированный ViewSet пользователей."""
+
     pagination_class = CustomPagination
+    permission_classes = [IsAuthenticated]
 
     def get_permissions(self):
         if self.action == 'retrieve':
             return [AllowAny()]
-        if self.action == 'create_destroy_avatar':
-            return [IsAuthenticated()]
-        if self.action == 'subscriptions':
-            return [IsAuthenticated()]
+        if self.action == 'list':
+            return [AllowAny()]
         return super().get_permissions()
 
     @action(detail=False, methods=['put', 'delete'],
@@ -69,7 +66,10 @@ class CustomUserVIewSet(UserViewSet):
     @action(detail=True, methods=['post', 'delete'], url_path='subscribe')
     def subscriptions(self, request, id):
         follower = request.user
-        following = get_object_or_404(User, id=id)
+        following = get_object_or_404(
+            User.objects.annotate(recipes_count=Count('recipes')), id=id)
+        # По спецификации же нужно возвращать 404 для несуществующего рецепта
+        # и при POST, и при DELETE запросе
 
         if follower == following:
             return Response(status=HTTP_400_BAD_REQUEST)
@@ -79,9 +79,7 @@ class CustomUserVIewSet(UserViewSet):
             serializer = SubscriptionSerializer(data=data)
             if serializer.is_valid():
                 serializer.save()
-                recipes_limit = request.query_params.get('recipes_limit', 10)
-                following = User.objects.annotate(
-                    recipes_count=Count('recipes')).get(id=id)
+                recipes_limit = request.query_params.get('recipes_limit')
                 user_serializer = ExtendedUserSerializer(
                     following,
                     context={
@@ -96,6 +94,7 @@ class CustomUserVIewSet(UserViewSet):
                 follower=follower, following=following).delete()
             if not deleted:
                 return Response(status=HTTP_400_BAD_REQUEST)
+                # А в случае неуспешного удаления нужно возвращать 400
             return Response(status=HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['get'], url_path='subscriptions')
@@ -117,7 +116,8 @@ class CustomUserVIewSet(UserViewSet):
 
 
 class TagViewSet(ReadOnlyModelViewSet):
-    """ViewSet тегов"""
+    """ViewSet тегов."""
+
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = (AllowAny,)
@@ -125,7 +125,8 @@ class TagViewSet(ReadOnlyModelViewSet):
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
-    """ViewSet ингредиентов"""
+    """ViewSet ингредиентов."""
+
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = (AllowAny,)
@@ -135,26 +136,24 @@ class IngredientViewSet(ReadOnlyModelViewSet):
 
 
 class RecipeViewSet(ModelViewSet):
-    """ViewSet рецептов"""
+    """ViewSet рецептов."""
+
     pagination_class = CustomPagination
+    permission_classes = [IsAuthenticated]
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
 
     def get_permissions(self):
-        if self.action == 'create':
-            return [IsAuthenticated()]
-        if self.action == 'perform_create':
-            return [IsAuthenticated()]
+        if self.action == 'retrieve':
+            return [AllowAny()]
+        if self.action == 'list':
+            return [AllowAny()]
+        if self.action == 'get_short_link':
+            return [AllowAny()]
         if self.action in ['update', 'partial_update']:
             return [IsAuthenticatedAuthor()]
         if self.action == 'destroy':
             return [IsAuthenticatedAuthor()]
-        if self.action == 'shopping_cart':
-            return [IsAuthenticated()]
-        if self.action == 'favorite':
-            return [IsAuthenticated()]
-        if self.action == 'download_shopping_cart':
-            return [IsAuthenticated()]
         return super().get_permissions()
 
     def get_queryset(self):
@@ -182,10 +181,12 @@ class RecipeViewSet(ModelViewSet):
     def perform_create(self, serializer):
         user = self.request.user
         recipe = serializer.save(author=user)
-        recipe.is_favorited = Favorite.objects.filter(
-            user=user, recipe=recipe).exists()
-        recipe.is_in_shopping_cart = ShoppingCart.objects.filter(
-            user=user, recipe=recipe).exists()
+        recipe.is_favorited = False
+        recipe.is_in_shopping_cart = False
+        # Так как значение полей вычисляется в get_queryset
+        # и при создании get_queryset не вызывается,
+        # а по спецификации эти поля должны быть, я
+        # назначаю их вручную
         return recipe
 
     @action(detail=True, methods=['get'], url_path='get-link')
@@ -235,21 +236,7 @@ class RecipeViewSet(ModelViewSet):
         recipes_ingredients = RecipeIngredient.objects.filter(
             recipe__in=shopping_cart.values('recipe')
         ).select_related('ingredient', 'recipe')
-        ingredient_dict = {}
-        for recipe_ingredient in recipes_ingredients:
-            ingredient_name = recipe_ingredient.ingredient.name
-            amount = recipe_ingredient.amount
-            measurement_unit = recipe_ingredient.ingredient.measurement_unit
-            if ingredient_name in ingredient_dict:
-                ingredient_dict[ingredient_name]['amount'] += amount
-            else:
-                ingredient_dict[ingredient_name] = {
-                    'ingredient': ingredient_name,
-                    'amount': amount,
-                    'measurement_unit': measurement_unit
-                }
-        ingredients = list(ingredient_dict.values())
-        csv_file = generate_shopping_cart_file(ingredients)
+        csv_file = generate_shopping_cart_file(recipes_ingredients)
         response = HttpResponse(csv_file, content_type='text/csv')
         response['Content-Disposition'] = (
             'attachment; filename="shopping_cart.csv"')
@@ -257,7 +244,8 @@ class RecipeViewSet(ModelViewSet):
 
 
 class ShortLinkRedirectView(View):
-    """Представление обработки коротких ссылок рецептов"""
+    """Представление обработки коротких ссылок рецептов."""
+
     def get(self, request, short_link):
         recipe = get_object_or_404(Recipe, short_link=short_link)
         return redirect('recipe-detail', pk=recipe.id)

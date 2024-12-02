@@ -11,7 +11,7 @@ class CustomUserManager(BaseUserManager):
     def create_user(
             self, username, email, first_name, last_name, password):
         if not all([username, email, first_name, last_name, password]):
-            raise ValueError("All fields are required")
+            raise ValueError('All fields are required')
         user = self.model(
             username=username,
             email=self.normalize_email(email),
@@ -44,11 +44,11 @@ class User(AbstractUser):
         verbose_name='Имя пользователя'
     )
     email = models.EmailField(
-        unique=True, blank=False, verbose_name='Email', max_length=254)
+        unique=True, verbose_name='Email', max_length=254)
     first_name = models.CharField(
-        max_length=150, blank=False, verbose_name='Имя')
+        max_length=150, verbose_name='Имя')
     last_name = models.CharField(
-        max_length=150, blank=False, verbose_name='Фамилия')
+        max_length=150, verbose_name='Фамилия')
     avatar = models.ImageField(
         upload_to=avatar_upload_path, default=None,
         null=True, blank=True,

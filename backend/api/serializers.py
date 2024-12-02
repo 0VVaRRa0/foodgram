@@ -1,5 +1,4 @@
-import os
-
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserSerializer as BaseUserSerializer
@@ -10,12 +9,12 @@ from cookbook.models import Ingredient, Recipe, RecipeIngredient, Tag
 from users.models import Subscription
 
 
-SITE_URL = os.getenv('SITE_URL')
 User = get_user_model()
 
 
 class UserSerializer(BaseUserSerializer):
-    """Сериализатор модели пользователей"""
+    """Сериализатор модели пользователей."""
+
     avatar = Base64ImageField(required=False)
     is_subscribed = serializers.SerializerMethodField()
 
@@ -33,18 +32,17 @@ class UserSerializer(BaseUserSerializer):
 
     def get_is_subscribed(self, obj):
         follower = self.context['request'].user
-        if not follower.id:
+        if not follower.is_authenticated:
             return False
         following = get_object_or_404(User, id=obj.id)
-        if Subscription.objects.filter(
+        return Subscription.objects.filter(
             follower=follower, following=following
-        ).exists():
-            return True
-        return False
+        ).exists()
 
 
 class ExtendedUserSerializer(UserSerializer):
-    """Расширенный сериализатор модели пользователей"""
+    """Расширенный сериализатор модели пользователей."""
+
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.IntegerField(read_only=True)
 
@@ -52,11 +50,12 @@ class ExtendedUserSerializer(UserSerializer):
         fields = UserSerializer.Meta.fields + ('recipes', 'recipes_count')
 
     def get_recipes(self, obj):
-        recipes_limit = self.context.get('recipes_limit', 10)
-        try:
+        recipes_limit = self.context.get(
+            'recipes_limit', settings.DEFAULT_RECIPES_LIMIT)
+        if str(recipes_limit).isdigit():
             recipes_limit = int(recipes_limit)
-        except (ValueError, TypeError):
-            recipes_limit = 10
+        else:
+            recipes_limit = settings.DEFAULT_RECIPES_LIMIT
         recipes = obj.recipes.all()[:recipes_limit]
         return ShortRecipeInfoSerializer(recipes, many=True).data
 
@@ -68,7 +67,8 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
 
 class AvatarSerializer(serializers.ModelSerializer):
-    """Сериализатор поля 'avatar' пользователей"""
+    """Сериализатор поля 'avatar' пользователей."""
+
     avatar = Base64ImageField()
 
     class Meta:
@@ -100,7 +100,8 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 
 class GetRecipeIngredientsSerializer(serializers.ModelSerializer):
-    """Сериализатор безопасных запросов модели RecipeIngredient"""
+    """Сериализатор безопасных запросов модели RecipeIngredient."""
+
     id = serializers.IntegerField(source='ingredient.id', read_only=True)
     name = serializers.CharField(source='ingredient.name', read_only=True)
     measurement_unit = serializers.CharField(
@@ -112,7 +113,7 @@ class GetRecipeIngredientsSerializer(serializers.ModelSerializer):
 
 
 class GetRecipesSerializer(serializers.ModelSerializer):
-    """Сериализатор безопасных запросов рецептов"""
+    """Сериализатор безопасных запросов рецептов."""
 
     author = UserSerializer(read_only=True)
     tags = TagSerializer(read_only=True, many=True)
@@ -143,7 +144,7 @@ class GetRecipesSerializer(serializers.ModelSerializer):
 
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
-    """Сериализатор модели RecipeIngredient"""
+    """Сериализатор модели RecipeIngredient."""
 
     class Meta:
         model = RecipeIngredient
@@ -152,6 +153,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
 class RecipeSerializer(serializers.ModelSerializer):
     """Сериализатор модели рецептов"""
+
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(), many=True)
     ingredients = RecipeIngredientSerializer(many=True)
@@ -214,7 +216,11 @@ class RecipeSerializer(serializers.ModelSerializer):
         for ingredient_item in ingredients:
             ingredient = Ingredient.objects.filter(
                 id=ingredient_item['id']).first()
+            # Я здесь использую filter, чтобы не перехватывать 404
+            # так как по спецефикации в таком случае должна вернуться 400
             if ingredient is None:
+                # как раз на случай, если filter вернёт пустой queryset
+                # вызывается ValidationError
                 raise serializers.ValidationError(
                     {'ingredients': 'Ингредиента с таким id не существует'}
                 )
@@ -236,7 +242,8 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class ShortLinkSerializer(serializers.ModelSerializer):
-    """Сериализатор коротких ссылок рецептов"""
+    """Сериализатор коротких ссылок рецептов."""
+
     short_link = serializers.SerializerMethodField()
 
     class Meta:
@@ -244,7 +251,7 @@ class ShortLinkSerializer(serializers.ModelSerializer):
         fields = ('short_link',)
 
     def get_short_link(self, obj):
-        return f'{SITE_URL}/s/{obj.short_link}/'
+        return f'{settings.SITE_URL}/s/{obj.short_link}/'
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -253,7 +260,7 @@ class ShortLinkSerializer(serializers.ModelSerializer):
 
 
 class ShortRecipeInfoSerializer(serializers.ModelSerializer):
-    """Укороченный сериализатор рецептов"""
+    """Укороченный сериализатор рецептов."""
 
     class Meta:
         model = Recipe

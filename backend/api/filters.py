@@ -4,7 +4,8 @@ from cookbook.models import Ingredient, Recipe
 
 
 class RecipeFilter(filters.FilterSet):
-    """Фильтр по полям рецептов"""
+    """Фильтр по полям рецептов."""
+
     is_favorited = filters.BooleanFilter(method='filter_is_favorited')
     is_in_shopping_cart = filters.BooleanFilter(
         method='filter_is_in_shopping_cart')
@@ -20,15 +21,15 @@ class RecipeFilter(filters.FilterSet):
         if not self.request.user.is_authenticated:
             return queryset
         if value:
-            return queryset.filter(favorite__user=self.request.user)
-        return queryset.exclude(favorite__user=self.request.user)
+            return queryset.filter(favorites__user=self.request.user)
+        return queryset.exclude(favorites__user=self.request.user)
 
     def filter_is_in_shopping_cart(self, queryset, name, value):
         if not self.request.user.is_authenticated:
             return queryset
         if value:
-            return queryset.filter(shoppingcart__user=self.request.user)
-        return queryset.exclude(shoppingcart__user=self.request.user)
+            return queryset.filter(shopping_carts__user=self.request.user)
+        return queryset.exclude(shopping_carts__user=self.request.user)
 
     def filter_tags(self, queryset, name, value):
         tag_list = self.request.query_params.getlist('tags')
@@ -38,7 +39,8 @@ class RecipeFilter(filters.FilterSet):
 
 
 class IngredientFilter(filters.FilterSet):
-    """Фильтр по полям ингредиентов"""
+    """Фильтр по полям ингредиентов."""
+
     name = filters.CharFilter(lookup_expr='istartswith')
 
     class Meta:

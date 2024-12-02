@@ -73,8 +73,10 @@ class RecipeIngredient(models.Model):
         Ingredient, verbose_name='Игредиент',
         on_delete=models.CASCADE, related_name='recipeingredient'
     )
-    amount = models.IntegerField(
-        'Количество', validators=[MinValueValidator(1)])
+    amount = models.PositiveSmallIntegerField(
+        'Количество',
+        validators=[MinValueValidator(1), MaxValueValidator(10000)]
+    )
 
     class Meta:
         verbose_name = 'Ингредиент рецепта'
@@ -92,12 +94,12 @@ class BaseUserRecipeRelation(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        verbose_name='Пользователь'
+        verbose_name='Пользователь',
     )
     recipe = models.ForeignKey(
         'Recipe',
         on_delete=models.CASCADE,
-        verbose_name='Рецепт'
+        verbose_name='Рецепт',
     )
 
     class Meta:
@@ -113,9 +115,11 @@ class ShoppingCart(BaseUserRecipeRelation):
     class Meta:
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Списки покупок'
+        default_related_name = 'shopping_carts'
 
 
 class Favorite(BaseUserRecipeRelation):
     class Meta:
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
+        default_related_name = 'favorites'
