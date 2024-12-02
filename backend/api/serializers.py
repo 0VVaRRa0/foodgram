@@ -216,7 +216,11 @@ class RecipeSerializer(serializers.ModelSerializer):
         for ingredient_item in ingredients:
             ingredient = Ingredient.objects.filter(
                 id=ingredient_item['id']).first()
+            # Я здесь использую filter, чтобы не перехватывать 404
+            # так как по спецефикации в таком случае должна вернуться 400
             if ingredient is None:
+                # как раз на случай, если filter вернёт пустой queryset
+                # вызывается ValidationError
                 raise serializers.ValidationError(
                     {'ingredients': 'Ингредиента с таким id не существует'}
                 )
