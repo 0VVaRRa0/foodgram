@@ -9,14 +9,12 @@ from hashids import Hashids
 
 def generate_short_link(obj_id):
     """Генерация короткой ссылки."""
-
     hashids = Hashids(min_length=settings.SHORT_LINK_MIN_LENGTH)
     return hashids.encode(obj_id)
 
 
 def generate_shopping_cart_file(recipes_ingredients):
     """Генерация файла списка покупок."""
-
     ingredient_dict = {}
     for recipe_ingredient in recipes_ingredients:
         ingredient_name = recipe_ingredient.ingredient.name
@@ -47,7 +45,6 @@ def generate_shopping_cart_file(recipes_ingredients):
 
 def avatar_upload_path(instance, filename):
     """Генерация названия файла аватара пользователей."""
-
     file_extension = Path(filename).suffix
     new_filename = f'{instance.username}_avatar_{uuid4().hex}{file_extension}'
     return str(Path('avatars') / new_filename)

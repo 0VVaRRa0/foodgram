@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.db.models import BooleanField, Exists, OuterRef, Value, Count
+from django.db.models import Count, Exists, OuterRef
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views import View
@@ -166,11 +166,6 @@ class RecipeViewSet(ModelViewSet):
                     user=user, recipe=OuterRef('pk'))),
                 is_in_shopping_cart=Exists(ShoppingCart.objects.filter(
                     user=user, recipe=OuterRef('pk'))))
-        else:
-            queryset = queryset.annotate(
-                is_favorited=Value(False, output_field=BooleanField()),
-                is_in_shopping_cart=Value(False, output_field=BooleanField())
-            )
         return queryset
 
     def get_serializer_class(self):
@@ -181,12 +176,6 @@ class RecipeViewSet(ModelViewSet):
     def perform_create(self, serializer):
         user = self.request.user
         recipe = serializer.save(author=user)
-        recipe.is_favorited = False
-        recipe.is_in_shopping_cart = False
-        # Так как значение полей вычисляется в get_queryset
-        # и при создании get_queryset не вызывается,
-        # а по спецификации эти поля должны быть, я
-        # назначаю их вручную
         return recipe
 
     @action(detail=True, methods=['get'], url_path='get-link')

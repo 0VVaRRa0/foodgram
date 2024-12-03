@@ -77,6 +77,15 @@ Foodgram - платформа для поиска гастрономическо
 6. Выполните команды `docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic` и    
     `docker compose exec backend cp -r /app/collected_static/. /backend_static/static/` для сбора статики бэкенда.
 
+
+## Учётные данные на сервере
+
+- IP 89.169.161.200
+- Доменное имя vvarra-foodgram.sytes.net
+- Учётные данные админа:
+    - email admin_user@example.com
+    - password SeCrEtPaSS
+
 ## Автор: Иван Данилин
 GitHub: [0VVaRRa0](https://github.com/0VVaRRa0)    
 Gmail: ioann.vorobey1029@gmail.com

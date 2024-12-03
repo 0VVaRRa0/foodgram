@@ -117,8 +117,9 @@ class GetRecipesSerializer(serializers.ModelSerializer):
 
     author = UserSerializer(read_only=True)
     tags = TagSerializer(read_only=True, many=True)
-    is_favorited = serializers.BooleanField(read_only=True)
-    is_in_shopping_cart = serializers.BooleanField(read_only=True)
+    is_favorited = serializers.BooleanField(read_only=True, default=False)
+    is_in_shopping_cart = serializers.BooleanField(
+        read_only=True, default=False)
 
     class Meta:
         model = Recipe
@@ -216,11 +217,9 @@ class RecipeSerializer(serializers.ModelSerializer):
         for ingredient_item in ingredients:
             ingredient = Ingredient.objects.filter(
                 id=ingredient_item['id']).first()
-            # Я здесь использую filter, чтобы не перехватывать 404
-            # так как по спецефикации в таком случае должна вернуться 400
+            # XXX: делаем фильтрацию вручную,
+            # чтобы при ошибке вернуть 400, а не 404
             if ingredient is None:
-                # как раз на случай, если filter вернёт пустой queryset
-                # вызывается ValidationError
                 raise serializers.ValidationError(
                     {'ingredients': 'Ингредиента с таким id не существует'}
                 )
