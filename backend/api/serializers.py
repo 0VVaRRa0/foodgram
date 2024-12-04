@@ -202,6 +202,16 @@ class RecipeSerializer(serializers.ModelSerializer):
         context = {'request': request}
         return GetRecipesSerializer(instance, context=context).data
 
+    def validate_image(self, value):
+        try:
+            _ = self.instance.image
+            if not value or value == '':
+                raise serializers.ValidationError('Ошибка валидации')
+        except AttributeError:
+            if not value or value == '':
+                raise serializers.ValidationError('Ошибка валидации')
+        return value
+
     def validate(self, data):
         ingredients = self.initial_data.get('ingredients')
         if not ingredients:
@@ -235,10 +245,8 @@ class RecipeSerializer(serializers.ModelSerializer):
                         'Убедитесь, что количество ингредиента больше 0'
                     }
                 )
-        if (
-            self.instance and not self.instance.image
-        ) and not data.get('image'):
-            raise serializers.ValidationError({'image': 'Обязательное поле'})
+        # if not data.get('image') or data.get('image') == '':
+        #     raise serializers.ValidationError({'image': 'Обязательное поле'})
         data['ingredients'] = ingredients
         return data
 
