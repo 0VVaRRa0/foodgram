@@ -205,6 +205,8 @@ class RecipeViewSet(ModelViewSet):
         # и при POST, и при DELETE запросе
 
         if request.method == 'POST':
+            if model.objects.filter(user=user, recipe=recipe).exists():
+                return Response(status=HTTP_400_BAD_REQUEST)
             data = {'user': user.id, 'recipe': recipe.id}
             serializer = serializer_class(data=data)
             if serializer.is_valid():
