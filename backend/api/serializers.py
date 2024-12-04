@@ -5,7 +5,8 @@ from djoser.serializers import UserSerializer as BaseUserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
-from cookbook.models import Ingredient, Recipe, RecipeIngredient, Tag
+from cookbook.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
+                             ShoppingCart, Tag)
 from users.models import Subscription
 
 
@@ -266,3 +267,18 @@ class ShortRecipeInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
+
+
+class BaseUserRecipeSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ('user', 'recipe')
+
+
+class ShoppingCartSerializer(BaseUserRecipeSerializer):
+    class Meta(BaseUserRecipeSerializer.Meta):
+        model = ShoppingCart
+
+
+class FavoriteSerializer(BaseUserRecipeSerializer):
+    class Meta(BaseUserRecipeSerializer.Meta):
+        model = Favorite

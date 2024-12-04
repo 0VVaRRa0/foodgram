@@ -20,8 +20,9 @@ from .filters import IngredientFilter, RecipeFilter
 from .paginators import CustomPagination
 from .permissions import IsAuthenticatedAuthor
 from .serializers import (AvatarSerializer, ExtendedUserSerializer,
-                          GetRecipesSerializer, IngredientSerializer,
-                          RecipeSerializer, ShortLinkSerializer,
+                          FavoriteSerializer, GetRecipesSerializer,
+                          IngredientSerializer, RecipeSerializer,
+                          ShoppingCartSerializer, ShortLinkSerializer,
                           ShortRecipeInfoSerializer, SubscriptionSerializer,
                           TagSerializer)
 from .utils import generate_shopping_cart_file, generate_short_link
@@ -189,33 +190,37 @@ class RecipeViewSet(ModelViewSet):
 
     @action(detail=True, methods=['post', 'delete'], url_path='shopping_cart')
     def shopping_cart(self, request, pk):
-        return self.shopping_cart_and_favorite(request, pk, ShoppingCart)
+        return self.shopping_cart_and_favorite(
+            request, pk, ShoppingCart, ShoppingCartSerializer)
 
     @action(detail=True, methods=['post', 'delete'], url_path='favorite')
     def favorite(self, request, pk):
-        return self.shopping_cart_and_favorite(request, pk, Favorite)
+        return self.shopping_cart_and_favorite(
+            request, pk, Favorite, FavoriteSerializer)
 
-    def shopping_cart_and_favorite(self, request, pk, model):
+    def shopping_cart_and_favorite(self, request, pk, model, serializer_class):
         user = request.user
         recipe = get_object_or_404(Recipe, id=pk)
-        # По спецификации же нужно возвращать 404 для несуществующего рецепта
+        # XXX: По спецификации возвращаем 404 для несуществующего рецепта
         # и при POST, и при DELETE запросе
 
         if request.method == 'POST':
-            _, created = model.objects.get_or_create(
-                user=user, recipe=recipe)
-            if not created:
-                return Response(status=HTTP_400_BAD_REQUEST)
-            serializer = ShortRecipeInfoSerializer(
-                recipe, context={'request': request})
-            return Response(serializer.data, status=HTTP_201_CREATED)
+            data = {'user': user.id, 'recipe': recipe.id}
+            serializer = serializer_class(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                short_recipe_serializer = ShortRecipeInfoSerializer(
+                    recipe, context={'request': request})
+                return Response(
+                    short_recipe_serializer.data, status=HTTP_201_CREATED)
+            return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
         elif request.method == 'DELETE':
             deleted, _ = model.objects.filter(
                 user=user, recipe=recipe).delete()
             if not deleted:
                 return Response(status=HTTP_400_BAD_REQUEST)
-            # А в случае неуспешного удаления нужно возвращать 400
+            # В случае неуспешного удаления возвращаем 400
             return Response(status=HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['get'], url_path='download_shopping_cart')
