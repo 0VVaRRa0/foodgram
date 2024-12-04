@@ -54,9 +54,10 @@ class Recipe(models.Model):
     )
     short_link = models.CharField(
         'Короткая ссылка', max_length=6, null=True, default=None)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ('id', 'name')
+        ordering = ('-created_at',)
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
 
